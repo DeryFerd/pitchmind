@@ -1,6 +1,6 @@
 # PitchMind — Handoff
 
-> **Stop point:** MVP product complete — all PRD/Plan P0–P1 gaps filled (except deploy + Stripe live)  
+> **Stop point:** MVP complete + repo architecture docs (`STRUCTURE.md`)  
 > **Date:** 2026-06-12  
 > **Next:** Production deploy + beta program (Phase 7)
 
@@ -20,10 +20,22 @@
 | Weekly email | Pro/Team, EN+ID, delta + actions, unsubscribe |
 | SSE progress | `GET /api/v1/audits/{id}/stream` |
 | Cache + cost | Perplexity 7-day cache, `estimated_cost_usd` in scorecard |
+| Architecture docs | [STRUCTURE.md](../../STRUCTURE.md), [README.md](../../README.md) |
 
 ---
 
-## New routes (this session)
+## Documentation (repo root)
+
+| File | Purpose |
+|------|---------|
+| [STRUCTURE.md](../../STRUCTURE.md) | Final layer map — frontend, API, worker, packages, connections |
+| [README.md](../../README.md) | Portfolio entry, quick start, stack summary |
+
+PitchMind-specific docs stay in `projects/pitchmind/` (PRD, Plan, progress, this file).
+
+---
+
+## Key API & UI routes (MVP)
 
 | Route | Purpose |
 |-------|---------|

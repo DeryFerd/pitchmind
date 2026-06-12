@@ -13,6 +13,7 @@
 | Phases 1–5 (core product) | DONE |
 | Phase 6 billing (code) | DONE (Stripe live skipped) |
 | MVP gap fill (settings, facts, email, SSE) | **DONE** |
+| Repo docs (README + STRUCTURE.md) | **DONE** |
 | Production deploy | not_started |
 | Phase 7 beta + launch | not_started |
 
@@ -40,6 +41,11 @@
 - [x] Migration 003 (`email_digest_enabled`)
 - [x] PRD / Plan / system-design status synced
 
+### Repo documentation — DONE (2026-06-12)
+
+- [x] [README.md](../../README.md) refreshed — MVP status, quick start, stack
+- [x] [STRUCTURE.md](../../STRUCTURE.md) — final architecture map (layers, connections, API map)
+
 ### Still pending
 
 - [ ] Production deploy (Vercel + Railway + Supabase)
@@ -62,4 +68,5 @@ cd apps/web && npm run build
 
 ## Links
 
+- [STRUCTURE.md](../../STRUCTURE.md) | [README.md](../../README.md)
 - [PRD](./PRD.md) | [Plan](./Plan.md) | [handoff.md](./handoff.md) | [memory.md](./memory.md)

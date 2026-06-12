@@ -1,6 +1,6 @@
 # PitchMind — Project Memory
 
-> Last updated: 2026-06-12 (MVP gap fill committed)
+> Last updated: 2026-06-12 (README + STRUCTURE.md at repo root)
 
 ---
 
@@ -10,6 +10,8 @@
 - **Repo:** https://github.com/DeryFerd/pitchmind
 - **Local path:** `projects/pitchmind`
 - **Status:** MVP product ~95% — deploy + beta next
+- **Architecture map:** [STRUCTURE.md](../../STRUCTURE.md) (repo root)
+- **Portfolio README:** [README.md](../../README.md)
 
 ---
 
@@ -80,3 +82,5 @@ pytest tests/         # 26 tests
 2. Supabase production + env secrets
 3. Run full E2E audit with real Perplexity + Ollama keys
 4. Phase 7: 10 beta users, case study, Product Hunt
+
+New contributors: start with **STRUCTURE.md** for layer map, then `handoff.md` for run commands.
