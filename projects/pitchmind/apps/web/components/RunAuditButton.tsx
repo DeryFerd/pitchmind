@@ -22,6 +22,7 @@ export function RunAuditButton({ brandId }: Props) {
           body: JSON.stringify({
             engines: ["perplexity"],
             languages: ["en", "id"],
+            include_site_audit: true,
           }),
         },
       );

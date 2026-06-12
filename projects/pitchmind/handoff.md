@@ -1,6 +1,6 @@
 # PitchMind — Handoff
 
-> **Stop point:** Phase 2 Geo Engine ~70% complete (visibility audit works; site auditor + action plan pending)  
+> **Stop point:** Phase 3 Site Auditor complete (code); Phase 4 Dashboard UI next  
 > **Date:** 2026-06-12  
 > **Repo:** https://github.com/DeryFerd/pitchmind
 
@@ -8,98 +8,60 @@
 
 ## Where We Stopped
 
-Phase 2 visibility engine is implemented. Perplexity client runs in **mock mode** without API key (good for dev without Docker/Supabase). Full E2E audit flow needs Docker (Postgres + Redis) + Supabase — can be wired later.
+Full audit pipeline: **visibility (Phase 2) + site readiness (Phase 3)** in one Celery task. Unit tests pass without Docker/Supabase. Infra still deferred.
 
 ---
 
-## Deferred (OK to do later)
+## Deferred (OK later)
 
-| Item | Why deferred |
-|------|--------------|
-| Docker Desktop | Local Postgres + Redis for migrations and Celery |
-| Supabase keys | Live auth + JWT for API calls |
-| `PERPLEXITY_API_KEY` | Real AI responses (mock works for dev) |
-| Railway / Vercel deploy | After local E2E verified |
+Docker, Supabase, Perplexity API key, deploy — same as before.
 
 ---
 
-## Immediate Next Steps (when ready)
+## Next: Phase 4 — Dashboard UI
 
-### Step 1: Local infra (15 min)
+- `/dashboard/brands/[id]` — scorecard + readiness score
+- Audit detail page with query results + site findings
+- Poll audit status after "Run audit"
+- Language switcher
 
-```bash
-# Start Docker Desktop, then:
-cd projects/pitchmind
-make dev-up
-make migrate
-make api
-make worker   # separate terminal
-make web
+See [Plan.md](./Plan.md) Phase 4 section.
+
+---
+
+## Phase 3 Delivered
+
+| Module | Path |
+|--------|------|
+| Crawler | `packages/site-auditor/pitchmind_site/crawler.py` |
+| llms.txt check | `llms_txt.py` |
+| robots.txt AI bots | `robots.py` |
+| JSON-LD schema | `schema.py` |
+| Content (H1, FAQ, chunks) | `content.py` |
+| Technical baseline | `technical.py` |
+| Readiness scorer | `readiness_score.py` |
+| Orchestrator | `auditor.py` |
+| Worker integration | `apps/worker/tasks/audit.py` |
+
+### Audit flow
+
+```
+POST /audits (include_site_audit: true)
+  → visibility batch (Perplexity mock/real)
+  → site crawl + 7 checks
+  → scorecard { share_of_model, readiness_score, site_findings[] }
 ```
 
-### Step 2: Supabase (30 min)
+### Tests
 
-Copy keys to `.env` and `apps/web/.env.local` — see `.env.example`.
-
-### Step 3: Test audit E2E
-
-1. Sign up → onboard → dashboard
-2. Click "Run audit"
-3. Worker processes queries (mock Perplexity if no API key)
-4. `GET /api/v1/audits/{id}` returns scorecard
-
-### Step 4: Phase 3 — Site Auditor
-
-Start in `packages/site-auditor/`:
-- `llms_txt.py`, `robots.py`, `schema.py`
-- Wire into audit worker after visibility batch
-
----
-
-## Phase 2 Delivered
-
-| Component | Path |
-|-----------|------|
-| Perplexity client (mock + real) | `packages/geo-engine/pitchmind_geo/clients/perplexity.py` |
-| Mention/citation parser | `packages/geo-engine/pitchmind_geo/parser.py` |
-| Hallucination checker | `packages/geo-engine/pitchmind_geo/hallucination.py` |
-| Scorecard scorer | `packages/geo-engine/pitchmind_geo/scorer.py` |
-| Batch runner | `packages/geo-engine/pitchmind_geo/runner.py` |
-| Celery audit task | `apps/worker/tasks/audit.py` |
-| Audit API | `apps/api/routers/audits.py` |
-| Run audit UI | `apps/web/components/RunAuditButton.tsx` |
-| Unit tests | `tests/unit/test_geo_*.py` |
-
-### API Endpoints (new)
-
-- `POST /api/v1/brands/{id}/audits` — enqueue visibility audit
-- `GET /api/v1/audits/{id}` — status + scorecard
-- `GET /api/v1/brands/{id}/audits` — audit history
-- `GET /api/v1/brands/{id}/scorecard` — latest scorecard
-
----
-
-## Mock Mode
-
-When `PERPLEXITY_API_KEY` is empty, geo-engine returns synthetic responses mentioning PitchMind + competitors. Lets you develop and test worker/scoring without paid API.
+```bash
+pytest tests/unit/   # 17 passed
+```
 
 ---
 
 ## Key Files
 
-| File | Why |
-|------|-----|
-| [Plan.md](./Plan.md) | Full phased roadmap |
-| [memory.md](./memory.md) | Stack decisions |
-| [progress.md](./progress.md) | Live status |
-| `packages/geo-engine/pitchmind_geo/runner.py` | Audit batch logic |
-| `apps/worker/tasks/audit.py` | Celery task |
-| `apps/api/routers/audits.py` | Audit endpoints |
-
----
-
-## Do NOT
-
-- Add local Ollama daemon — use Ollama Cloud only
-- Skip bilingual support
-- Require Docker/Supabase to run unit tests (`pytest tests/unit/` works standalone)
+- [progress.md](./progress.md) — live status
+- [memory.md](./memory.md) — conventions
+- `packages/site-auditor/pitchmind_site/auditor.py`

@@ -103,3 +103,5 @@ class AuditSummary(BaseModel):
     started_at: datetime | None = None
     completed_at: datetime | None = None
     query_results_count: int = 0
+    readiness_score: int | None = None
+    site_findings_count: int = 0

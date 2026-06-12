@@ -25,6 +25,27 @@ router = APIRouter(prefix="/api/v1", tags=["audits"])
 
 FREE_TIER_MAX_QUERIES = 5
 ESTIMATED_SECONDS_PER_QUERY = 8
+SITE_AUDIT_SECONDS = 30
+
+
+def _audit_summary(audit: AuditRun, query_count: int) -> AuditSummary:
+    readiness = None
+    if audit.scorecard:
+        readiness = audit.scorecard.get("readiness_score")
+    site_findings = len(audit.site_audit.findings) if audit.site_audit else 0
+    if not site_findings and audit.scorecard:
+        site_findings = len(audit.scorecard.get("site_findings", []))
+    return AuditSummary(
+        audit_id=audit.id,
+        brand_id=audit.brand_id,
+        status=audit.status.value,
+        scorecard=audit.scorecard,
+        started_at=audit.started_at,
+        completed_at=audit.completed_at,
+        query_results_count=query_count,
+        readiness_score=readiness,
+        site_findings_count=site_findings,
+    )
 
 
 def _get_owned_brand(db: Session, brand_id: uuid.UUID, auth: AuthUser) -> Brand:
@@ -88,13 +109,17 @@ def start_audit(
 
     from apps.worker.tasks.audit import run_visibility_audit
 
-    run_visibility_audit.delay(str(audit.id))
+    run_visibility_audit.delay(str(audit.id), include_site_audit=body.include_site_audit)
+
+    estimated = len(queries) * ESTIMATED_SECONDS_PER_QUERY
+    if body.include_site_audit:
+        estimated += SITE_AUDIT_SECONDS
 
     return AuditOut(
         audit_id=audit.id,
         brand_id=brand_id,
         status=audit.status.value,
-        estimated_duration_seconds=len(queries) * ESTIMATED_SECONDS_PER_QUERY,
+        estimated_duration_seconds=estimated,
     )
 
 
@@ -110,15 +135,7 @@ def get_audit(
     _get_owned_brand(db, audit.brand_id, auth)
 
     results = db.query(QueryResult).filter(QueryResult.audit_run_id == audit_id).all()
-    return AuditSummary(
-        audit_id=audit.id,
-        brand_id=audit.brand_id,
-        status=audit.status.value,
-        scorecard=audit.scorecard,
-        started_at=audit.started_at,
-        completed_at=audit.completed_at,
-        query_results_count=len(results),
-    )
+    return _audit_summary(audit, len(results))
 
 
 @router.get("/brands/{brand_id}/audits", response_model=list[AuditSummary])
@@ -135,18 +152,7 @@ def list_audits(
         .limit(20)
         .all()
     )
-    return [
-        AuditSummary(
-            audit_id=a.id,
-            brand_id=a.brand_id,
-            status=a.status.value,
-            scorecard=a.scorecard,
-            started_at=a.started_at,
-            completed_at=a.completed_at,
-            query_results_count=len(a.query_results),
-        )
-        for a in audits
-    ]
+    return [_audit_summary(a, len(a.query_results)) for a in audits]
 
 
 @router.get("/brands/{brand_id}/scorecard")

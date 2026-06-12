@@ -1,7 +1,7 @@
 # PitchMind — Project Memory
 
 > Session memory for agents/devs continuing this project.  
-> Last updated: 2026-06-12 (Phase 2)
+> Last updated: 2026-06-12 (Phase 4)
 
 ---
 
@@ -24,9 +24,8 @@
 | Worker | Celery + Redis |
 | DB | PostgreSQL (Supabase prod / docker local port 5433) |
 | Redis | Upstash prod / docker local port 6380 |
-| Visibility AI | Perplexity API (Phase 2) |
+| Visibility AI | Perplexity API (mock mode if no key) |
 | Action plan LLM | **Ollama Cloud** — `https://ollama.com`, NOT local Ollama |
-| Action plan model | `gpt-oss:20b-cloud` (default), `qwen3.5:cloud` (deep) |
 | Billing | Stripe (Phase 6) |
 
 ---
@@ -35,81 +34,55 @@
 
 ```
 projects/pitchmind/
-├── apps/web/          → Next.js, run: cd apps/web && npm run dev
-├── apps/api/          → FastAPI, PYTHONPATH=packages/db;apps
-├── apps/worker/       → Celery
-├── packages/db/       → pitchmind_db models + alembic/
-├── packages/geo-engine/   → stub (Phase 2)
-├── packages/site-auditor/ → stub (Phase 3)
-├── packages/harness/      → stub
+├── apps/web/              → Next.js 15 + next-intl
+├── apps/api/              → FastAPI routers: workspaces, brands, audits
+├── apps/worker/           → Celery audit task (visibility + site)
+├── packages/db/           → SQLAlchemy + Alembic
+├── packages/geo-engine/   → Perplexity, parser, scorer, runner
+├── packages/site-auditor/ → llms.txt, robots, schema, readiness
 ├── infra/docker-compose.yml
 └── Makefile
 ```
 
-**PYTHONPATH for Python apps:** `packages/db` and `apps` (see Makefile).
-
-**Alembic:** run from `packages/db` with `DATABASE_URL` set.
+**PYTHONPATH:** `packages/db` and `apps` (+ geo-engine, site-auditor in worker).
 
 ---
 
-## What Was Built (2026-06-11)
+## Completed Phases
 
-1. Full SQLAlchemy schema: users, workspaces, brands, competitors, golden_queries, audit_runs, query_results, site_audits, action_plans, subscriptions
-2. Alembic migration `001_initial_schema.py`
-3. Query seed templates: saas/local/ecom × EN/ID (20 queries each)
-4. FastAPI routers with ownership checks
-5. Next.js bilingual landing + auth UI + onboarding (localStorage) + dashboard shell
-6. Celery `run_visibility_audit` placeholder
-7. CI workflow, API Dockerfile, railway.toml
+| Phase | Summary |
+|-------|---------|
+| 1 | Monorepo, API, web auth/onboarding, CI |
+| 2 | Geo-engine, audit API, Celery visibility task, mock Perplexity |
+| 3 | Site auditor (7 checks), readiness score, worker chain |
+| 4 | **in progress** — dashboard UI, audit detail pages |
 
 ---
 
-## Known Gaps / Stubs
+## Known Gaps
 
-- Auth pages need real Supabase env vars to work (middleware + API JWT)
-- DB migration requires Docker Desktop running (`make dev-up` then `make migrate`)
-- Perplexity uses **mock mode** when `PERPLEXITY_API_KEY` is unset (dev-friendly)
-- Site auditor + action plan (Ollama Cloud) not yet implemented (Phase 3/5)
-- No Stripe, Resend clients yet
-
-## What Was Built (2026-06-12)
-
-1. `apps/web/lib/api.ts` — client-side API helper with Supabase Bearer token
-2. `apps/web/lib/api-server.ts` — server-side fetch for dashboard
-3. Onboarding wired: workspace → brand → competitors → query seed (`saas`)
-4. `GET /api/v1/workspaces/{id}/brands` endpoint
-5. Dashboard loads brands from API (PostgreSQL-backed)
-6. Next.js middleware protects `/dashboard` and `/onboarding` routes
-7. Locale-aware redirects on login/signup/onboarding
-
-## What Was Built (2026-06-12 Phase 2)
-
-1. `packages/geo-engine/` — Perplexity client (mock + real), parser, hallucination checker, scorer, batch runner
-2. `apps/worker/tasks/audit.py` — full visibility audit Celery task
-3. `apps/api/routers/audits.py` — POST/GET audits, scorecard endpoints
-4. Dashboard `RunAuditButton` — enqueue audit from UI
-5. Unit tests: parser, scorer, hallucination, runner (11 tests pass)
+- Supabase + Docker deferred (auth/migrations need user setup)
+- Action plan (Ollama Cloud) — Phase 5
+- Stripe, Resend — Phase 5/6
+- Rate limiter, SSE progress — optional MVP
 
 ---
 
 ## Dev Commands
 
 ```bash
-# From projects/pitchmind/
-make dev-up          # postgres:5433, redis:6380
-make migrate         # alembic upgrade head
-make api             # :8000
-make web             # :3000
-make worker          # celery
+make dev-up && make migrate
+make api    # :8000
+make worker # celery
+make web    # :3000
+pytest tests/unit/   # 17 tests, no Docker needed
 ```
-
-Copy `.env.example` → `.env` at pitchmind root and `apps/web/.env.local`.
 
 ---
 
 ## Conventions
 
 - API prefix: `/api/v1`
-- Locales: `en`, `id` via next-intl `[locale]` routes
-- Brand ownership: workspace.owner_id must match JWT sub
-- Do NOT add local Ollama daemon — use Ollama Cloud API only
+- Locales: `en`, `id` via `[locale]` routes
+- User-facing strings: `messages/en.json` + `id.json` only
+- Do NOT add local Ollama daemon — Ollama Cloud only

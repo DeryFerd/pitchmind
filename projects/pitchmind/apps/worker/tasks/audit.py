@@ -1,4 +1,4 @@
-"""Visibility audit Celery task — Perplexity batch + scoring."""
+"""Visibility audit Celery task — Perplexity batch + site audit + scoring."""
 
 from __future__ import annotations
 
@@ -10,12 +10,15 @@ from datetime import UTC, datetime
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "packages", "db"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "packages", "geo-engine"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "packages", "site-auditor"))
 
 from pitchmind_db.base import get_session_factory
-from pitchmind_db.models import AuditRun, AuditStatus, Brand, QueryResult
+from pitchmind_db.models import AuditFinding, AuditRun, AuditStatus, Brand, QueryResult, SiteAudit
 from pitchmind_geo.hallucination import BrandFactsData
 from pitchmind_geo.runner import GoldenQueryInput, run_visibility_batch
 from pitchmind_geo.scorer import QueryResultData, compute_scorecard
+from pitchmind_site.auditor import run_site_audit
+from pitchmind_site.readiness_score import merge_into_scorecard
 
 from apps.worker.celery_app import celery_app
 
@@ -28,8 +31,30 @@ def _run_async(coro):
         loop.close()
 
 
+def _persist_site_audit(session, audit_uuid: uuid.UUID, site_result) -> None:
+    site_audit = SiteAudit(
+        id=uuid.uuid4(),
+        audit_run_id=audit_uuid,
+        readiness_score=site_result.readiness_score,
+    )
+    session.add(site_audit)
+    session.flush()
+
+    for finding in site_result.findings:
+        session.add(
+            AuditFinding(
+                id=uuid.uuid4(),
+                site_audit_id=site_audit.id,
+                check_type=finding.check_type,
+                severity=finding.severity,
+                message=finding.message,
+                recommendation=finding.recommendation,
+            )
+        )
+
+
 @celery_app.task(name="audit.run_visibility", bind=True, max_retries=3)
-def run_visibility_audit(self, audit_run_id: str) -> dict:
+def run_visibility_audit(self, audit_run_id: str, include_site_audit: bool = True) -> dict:
     session = get_session_factory()()
     audit_uuid = uuid.UUID(audit_run_id)
 
@@ -99,9 +124,16 @@ def run_visibility_audit(self, audit_run_id: str) -> dict:
         ]
         scorecard = compute_scorecard(scorecard_input, brand.name, competitors)
 
+        readiness_score = None
+        if include_site_audit:
+            site_result = run_site_audit(brand.website_url)
+            _persist_site_audit(session, audit_uuid, site_result)
+            scorecard = merge_into_scorecard(scorecard, site_result)
+            readiness_score = site_result.readiness_score
+
         total_queries = len(queries)
         completed = len(parsed)
-        if completed == 0:
+        if completed == 0 and not include_site_audit:
             audit.status = AuditStatus.FAILED
         elif completed < total_queries:
             audit.status = AuditStatus.PARTIAL
@@ -118,6 +150,7 @@ def run_visibility_audit(self, audit_run_id: str) -> dict:
             "queries_completed": completed,
             "queries_total": total_queries,
             "share_of_model": scorecard.get("share_of_model"),
+            "readiness_score": readiness_score,
         }
 
     except Exception as exc:
