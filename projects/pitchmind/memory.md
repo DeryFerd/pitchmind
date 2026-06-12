@@ -1,7 +1,7 @@
 # PitchMind — Project Memory
 
 > Session memory for agents/devs continuing this project.  
-> Last updated: 2026-06-11
+> Last updated: 2026-06-12
 
 ---
 
@@ -66,11 +66,21 @@ projects/pitchmind/
 
 ## Known Gaps / Stubs
 
-- Onboarding saves to `localStorage` only — not yet calling API
-- Auth pages need real Supabase env vars to work
+- Auth pages need real Supabase env vars to work (middleware + API JWT)
+- DB migration requires Docker Desktop running (`make dev-up` then `make migrate`)
 - `POST /audits` not implemented (Phase 2)
 - Worker task returns placeholder JSON
 - No Stripe, Resend, Perplexity, Ollama Cloud clients yet
+
+## What Was Built (2026-06-12)
+
+1. `apps/web/lib/api.ts` — client-side API helper with Supabase Bearer token
+2. `apps/web/lib/api-server.ts` — server-side fetch for dashboard
+3. Onboarding wired: workspace → brand → competitors → query seed (`saas`)
+4. `GET /api/v1/workspaces/{id}/brands` endpoint
+5. Dashboard loads brands from API (PostgreSQL-backed)
+6. Next.js middleware protects `/dashboard` and `/onboarding` routes
+7. Locale-aware redirects on login/signup/onboarding
 
 ---
 

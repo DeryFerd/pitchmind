@@ -51,11 +51,14 @@
     "description": "Short description",
     "competitor1": "Competitor 1",
     "competitor2": "Competitor 2",
-    "next": "Continue to dashboard"
+    "next": "Continue to dashboard",
+    "saving": "Saving...",
+    "error": "Something went wrong. Check your connection and try again."
   },
   "dashboard": {
     "title": "Dashboard",
     "empty": "No brands yet. Complete onboarding to start your first GEO audit.",
+    "yourBrands": "Your brands",
     "runAudit": "Run audit"
   }
 }

@@ -51,11 +51,14 @@
     "description": "Deskripsi singkat",
     "competitor1": "Kompetitor 1",
     "competitor2": "Kompetitor 2",
-    "next": "Lanjut ke dashboard"
+    "next": "Lanjut ke dashboard",
+    "saving": "Menyimpan...",
+    "error": "Terjadi kesalahan. Periksa koneksi Anda dan coba lagi."
   },
   "dashboard": {
     "title": "Dashboard",
     "empty": "Belum ada brand. Selesaikan onboarding untuk audit GEO pertama.",
+    "yourBrands": "Brand Anda",
     "runAudit": "Jalankan audit"
   }
 }

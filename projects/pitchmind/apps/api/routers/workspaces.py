@@ -2,16 +2,16 @@ import os
 import sys
 import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "packages", "db"))
 
-from pitchmind_db.models import Subscription, SubscriptionTier, User, Workspace
+from pitchmind_db.models import Brand, Subscription, SubscriptionTier, User, Workspace
 
 from apps.api.deps import get_db
 from apps.api.middleware.auth import AuthUser, get_current_user
-from apps.api.schemas import WorkspaceCreate, WorkspaceOut
+from apps.api.schemas import BrandOut, WorkspaceCreate, WorkspaceOut
 
 router = APIRouter(prefix="/api/v1/workspaces", tags=["workspaces"])
 
@@ -48,3 +48,15 @@ def list_workspaces(
 ):
     _ensure_user(db, auth)
     return db.query(Workspace).filter(Workspace.owner_id == auth.id).all()
+
+
+@router.get("/{workspace_id}/brands", response_model=list[BrandOut])
+def list_workspace_brands(
+    workspace_id: uuid.UUID,
+    auth: AuthUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    workspace = db.get(Workspace, workspace_id)
+    if not workspace or workspace.owner_id != auth.id:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    return db.query(Brand).filter(Brand.workspace_id == workspace_id).all()

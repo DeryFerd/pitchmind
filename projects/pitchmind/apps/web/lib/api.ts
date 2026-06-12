@@ -1,0 +1,98 @@
+import { createClient } from "@/lib/supabase/client";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+export type Workspace = { id: string; name: string };
+export type Brand = {
+  id: string;
+  workspace_id: string;
+  name: string;
+  website_url: string;
+  description: string | null;
+};
+
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
+async function getAccessToken(): Promise<string | null> {
+  const supabase = createClient();
+  const { data } = await supabase.auth.getSession();
+  return data.session?.access_token ?? null;
+}
+
+export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const token = await getAccessToken();
+  if (!token) throw new ApiError("Not authenticated", 401);
+
+  const res = await fetch(`${API_URL}${path}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      ...options.headers,
+    },
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const detail = typeof body.detail === "string" ? body.detail : `API error ${res.status}`;
+    throw new ApiError(detail, res.status);
+  }
+
+  if (res.status === 204) return undefined as T;
+  return res.json() as Promise<T>;
+}
+
+function normalizeUrl(url: string): string {
+  const trimmed = url.trim();
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+}
+
+export async function completeOnboarding(data: {
+  brandName: string;
+  website: string;
+  description: string;
+  competitor1: string;
+  competitor2: string;
+}) {
+  const workspaces = await apiFetch<Workspace[]>("/api/v1/workspaces");
+  const workspace =
+    workspaces[0] ??
+    (await apiFetch<Workspace>("/api/v1/workspaces", {
+      method: "POST",
+      body: JSON.stringify({ name: `${data.brandName} Workspace` }),
+    }));
+
+  const brand = await apiFetch<Brand>("/api/v1/brands", {
+    method: "POST",
+    body: JSON.stringify({
+      workspace_id: workspace.id,
+      name: data.brandName,
+      website_url: normalizeUrl(data.website),
+      description: data.description || null,
+    }),
+  });
+
+  const competitors = [data.competitor1, data.competitor2].filter(Boolean);
+  for (const name of competitors) {
+    await apiFetch(`/api/v1/brands/${brand.id}/competitors`, {
+      method: "POST",
+      body: JSON.stringify({ name }),
+    });
+  }
+
+  await apiFetch(`/api/v1/brands/${brand.id}/queries/seed`, {
+    method: "POST",
+    body: JSON.stringify({ template: "saas", category: "software" }),
+  });
+
+  return brand;
+}
