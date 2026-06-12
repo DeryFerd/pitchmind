@@ -1,0 +1,7 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "apps/worker/Dockerfile"
+
+[deploy]
+startCommand = "celery -A apps.worker.celery_app worker --loglevel=info"
+restartPolicyType = "ON_FAILURE"

@@ -130,3 +130,28 @@ class AuditDetail(AuditSummary):
     site_findings: list[SiteFindingOut] = []
     action_plan: list[dict] = []
     action_plan_source: str | None = None
+
+
+class SubscriptionStatus(BaseModel):
+    tier: str
+    queries_used: int
+    queries_limit: int
+    site_audits_used: int
+    site_audits_limit: int
+    brands_used: int
+    brands_limit: int
+    period_reset_at: str | None = None
+    has_stripe_customer: bool
+
+
+class CheckoutRequest(BaseModel):
+    tier: str = Field(pattern="^(pro|team)$")
+    locale: str = Field(default="en", pattern="^(en|id)$")
+
+
+class CheckoutResponse(BaseModel):
+    checkout_url: str
+
+
+class PortalResponse(BaseModel):
+    portal_url: str

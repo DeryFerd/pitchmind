@@ -48,9 +48,18 @@ export default async function HomePage({ params }: Props) {
         <h2 className="text-2xl font-bold mb-8 text-center">{t("pricing.title")}</h2>
         <div className="grid md:grid-cols-3 gap-6">
           {(["free", "pro", "team"] as const).map((tier) => (
-            <div key={tier} className="border border-slate-800 rounded-xl p-6 text-center">
+            <div key={tier} className="border border-slate-800 rounded-xl p-6 text-center space-y-4">
               <h3 className="font-semibold capitalize">{t(`pricing.${tier}`)}</h3>
               <p className="text-3xl font-bold mt-2">{t(`pricing.${tier}Price`)}</p>
+              {tier === "free" ? (
+                <Link href="signup" className="inline-block bg-indigo-600 hover:bg-indigo-500 px-6 py-2 rounded-lg text-sm">
+                  {t("hero.cta")}
+                </Link>
+              ) : (
+                <Link href="signup" className="inline-block border border-indigo-600 text-indigo-300 hover:bg-indigo-950 px-6 py-2 rounded-lg text-sm">
+                  {t("nav.signup")}
+                </Link>
+              )}
             </div>
           ))}
         </div>

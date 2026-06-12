@@ -188,7 +188,9 @@ class Subscription(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)
     tier: Mapped[SubscriptionTier] = mapped_column(Enum(SubscriptionTier), default=SubscriptionTier.FREE)
     stripe_customer_id: Mapped[str | None] = mapped_column(String(255))
+    stripe_subscription_id: Mapped[str | None] = mapped_column(String(255))
     queries_used_this_period: Mapped[int] = mapped_column(Integer, default=0)
+    site_audits_used_this_period: Mapped[int] = mapped_column(Integer, default=0)
     period_reset_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     user: Mapped["User"] = relationship(back_populates="subscription")

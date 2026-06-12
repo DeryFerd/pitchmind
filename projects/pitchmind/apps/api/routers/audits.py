@@ -14,19 +14,16 @@ from pitchmind_db.models import (
     Brand,
     GoldenQuery,
     QueryResult,
-    Subscription,
-    SubscriptionTier,
     Workspace,
 )
 
 from apps.api.deps import get_db
 from apps.api.middleware.auth import AuthUser, get_current_user
 from apps.api.schemas import AuditCreate, AuditDetail, AuditOut, AuditSummary, QueryResultOut, SiteFindingOut
+from apps.api.services.billing import check_audit_limits, record_audit_usage
 from apps.api.services.pdf_export import build_audit_pdf
 
 router = APIRouter(prefix="/api/v1", tags=["audits"])
-
-FREE_TIER_MAX_QUERIES = 5
 ESTIMATED_SECONDS_PER_QUERY = 8
 SITE_AUDIT_SECONDS = 30
 ACTION_PLAN_SECONDS = 45
@@ -62,16 +59,6 @@ def _get_owned_brand(db: Session, brand_id: uuid.UUID, auth: AuthUser) -> Brand:
     return brand
 
 
-def _check_tier_limits(db: Session, auth: AuthUser, query_count: int) -> None:
-    sub = db.get(Subscription, auth.id)
-    tier = sub.tier if sub else SubscriptionTier.FREE
-    if tier == SubscriptionTier.FREE and query_count > FREE_TIER_MAX_QUERIES:
-        raise HTTPException(
-            status_code=status.HTTP_402_PAYMENT_REQUIRED,
-            detail=f"Free tier limited to {FREE_TIER_MAX_QUERIES} queries per audit",
-        )
-
-
 @router.post(
     "/brands/{brand_id}/audits",
     response_model=AuditOut,
@@ -100,7 +87,7 @@ def start_audit(
     if not queries:
         raise HTTPException(status_code=400, detail="No golden queries for requested languages")
 
-    _check_tier_limits(db, auth, len(queries))
+    check_audit_limits(db, auth.id, len(queries), body.include_site_audit)
 
     audit = AuditRun(
         id=uuid.uuid4(),
@@ -110,6 +97,8 @@ def start_audit(
     db.add(audit)
     db.commit()
     db.refresh(audit)
+
+    record_audit_usage(db, auth.id, len(queries), body.include_site_audit)
 
     from apps.worker.tasks.audit import run_visibility_audit
 

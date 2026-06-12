@@ -56,6 +56,18 @@ export type ScorecardResponse = {
   scorecard: Record<string, unknown>;
 };
 
+export type SubscriptionStatus = {
+  tier: string;
+  queries_used: number;
+  queries_limit: number;
+  site_audits_used: number;
+  site_audits_limit: number;
+  brands_used: number;
+  brands_limit: number;
+  period_reset_at: string | null;
+  has_stripe_customer: boolean;
+};
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -140,4 +152,24 @@ export async function completeOnboarding(data: {
   });
 
   return brand;
+}
+
+export async function fetchSubscription(): Promise<SubscriptionStatus> {
+  return apiFetch<SubscriptionStatus>("/api/v1/billing/subscription");
+}
+
+export async function startCheckout(tier: "pro" | "team", locale: string): Promise<string> {
+  const res = await apiFetch<{ checkout_url: string }>("/api/v1/billing/checkout", {
+    method: "POST",
+    body: JSON.stringify({ tier, locale }),
+  });
+  return res.checkout_url;
+}
+
+export async function openBillingPortal(): Promise<string> {
+  const res = await apiFetch<{ portal_url: string }>("/api/v1/billing/portal", {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+  return res.portal_url;
 }

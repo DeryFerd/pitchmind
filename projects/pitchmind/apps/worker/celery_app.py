@@ -19,6 +19,10 @@ celery_app.conf.update(
             "task": "email.send_weekly_digest",
             "schedule": crontab(hour=9, minute=0, day_of_week=1),
         },
+        "reset-billing-periods": {
+            "task": "billing.reset_usage_periods",
+            "schedule": crontab(hour=0, minute=5, day_of_month=1),
+        },
     },
 )
 celery_app.autodiscover_tasks(["apps.worker.tasks"])

@@ -69,7 +69,33 @@
     "noAuditYet": "Belum ada audit — jalankan audit GEO pertama.",
     "lastAudit": "Audit terakhir",
     "startOnboarding": "Atur brand Anda",
-    "viewBrand": "Lihat detail brand →"
+    "viewBrand": "Lihat detail brand →",
+    "upgradePrompt": "Upgrade paket untuk melanjutkan",
+    "upgradeLink": "Lihat paket & upgrade →"
+  },
+  "billing": {
+    "title": "Tagihan & penggunaan",
+    "loginRequired": "Masuk untuk mengelola tagihan.",
+    "currentPlan": "Paket saat ini",
+    "queriesUsage": "Query periode ini",
+    "siteAuditsUsage": "Audit situs periode ini",
+    "brandsUsage": "Brand",
+    "periodReset": "Penggunaan reset pada {date}",
+    "upgrade": "Upgrade",
+    "currentTier": "Paket saat ini",
+    "loading": "Memuat…",
+    "manageBilling": "Kelola langganan di Stripe →",
+    "checkoutSuccess": "Pembayaran berhasil! Paket akan diperbarui segera.",
+    "checkoutCancel": "Checkout dibatalkan. Tidak ada perubahan.",
+    "error": "Permintaan tagihan gagal. Coba lagi atau hubungi support.",
+    "plans": {
+      "pro": "Pro",
+      "proPrice": "$19/bulan",
+      "proDesc": "5 brand, 200 query/bulan, laporan mingguan",
+      "team": "Tim",
+      "teamPrice": "$49/bulan",
+      "teamDesc": "20 brand, 1000 query/bulan, 3 kursi"
+    }
   },
   "audit": {
     "auditDetail": "Hasil audit",

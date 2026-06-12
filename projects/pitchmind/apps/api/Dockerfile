@@ -5,7 +5,9 @@ COPY pyproject.toml .
 COPY packages/ packages/
 COPY apps/api/ apps/api/
 
-RUN pip install --no-cache-dir fastapi uvicorn sqlalchemy psycopg2-binary pydantic pydantic-settings python-jose httpx
+RUN pip install --no-cache-dir \
+    fastapi uvicorn sqlalchemy psycopg2-binary pydantic pydantic-settings \
+    python-jose httpx reportlab stripe
 
 ENV PYTHONPATH=/app/packages/db:/app/apps
 EXPOSE 8000

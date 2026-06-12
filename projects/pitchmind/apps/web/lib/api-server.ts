@@ -49,3 +49,7 @@ export async function fetchAuditDetail(auditId: string): Promise<AuditDetail | n
 export async function fetchLatestScorecard(brandId: string): Promise<ScorecardResponse | null> {
   return serverApiFetch<ScorecardResponse>(`/api/v1/brands/${brandId}/scorecard`);
 }
+
+export async function fetchSubscriptionStatus(): Promise<import("@/lib/api").SubscriptionStatus | null> {
+  return serverApiFetch<import("@/lib/api").SubscriptionStatus>("/api/v1/billing/subscription");
+}

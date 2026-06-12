@@ -6,7 +6,7 @@ Bilingual EN + ID | Ollama Cloud + Perplexity API | Full-stack production portfo
 
 ## Status
 
-**Phase 1 in progress** — monorepo scaffolded, API + web foundation, DB migrations ready.
+**Phase 6 in progress** — Stripe billing + tier enforcement implemented; production deploy pending.
 
 ## Repository structure
 

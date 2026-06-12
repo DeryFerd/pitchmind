@@ -14,6 +14,7 @@ export function RunAuditButton({ brandId, locale }: Props) {
   const [polling, setPolling] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [showUpgrade, setShowUpgrade] = useState(false);
 
   const pollAudit = useCallback(
     async (auditId: string) => {
@@ -50,6 +51,7 @@ export function RunAuditButton({ brandId, locale }: Props) {
     setLoading(true);
     setMessage("");
     setError("");
+    setShowUpgrade(false);
     try {
       const res = await apiFetch<{ audit_id: string; status: string }>(
         `/api/v1/brands/${brandId}/audits`,
@@ -65,7 +67,12 @@ export function RunAuditButton({ brandId, locale }: Props) {
       );
       await pollAudit(res.audit_id);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : t("auditError"));
+      if (err instanceof ApiError && err.status === 402) {
+        setShowUpgrade(true);
+        setError(`${err.message} — ${t("upgradePrompt")}`);
+      } else {
+        setError(err instanceof ApiError ? err.message : t("auditError"));
+      }
     } finally {
       setLoading(false);
     }
@@ -83,7 +90,16 @@ export function RunAuditButton({ brandId, locale }: Props) {
         {busy ? t("auditRunning") : t("runAudit")}
       </button>
       {message && !error && <p className="text-sm text-slate-400">{message}</p>}
-      {error && <p className="text-sm text-red-400">{error}</p>}
+      {error && (
+        <div className="space-y-2">
+          <p className="text-sm text-red-400">{error}</p>
+          {showUpgrade ? (
+            <Link href="/dashboard/settings" locale={locale} className="text-sm text-indigo-400 hover:underline">
+              {t("upgradeLink")}
+            </Link>
+          ) : null}
+        </div>
+      )}
       <Link
         href={`/dashboard/brands/${brandId}`}
         locale={locale}

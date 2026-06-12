@@ -12,5 +12,14 @@ class Settings(BaseSettings):
     api_host: str = "0.0.0.0"
     api_port: int = 8000
 
+    stripe_secret_key: str = ""
+    stripe_webhook_secret: str = ""
+    stripe_price_id_pro: str = ""
+    stripe_price_id_team: str = ""
+
+    web_url: str = "http://localhost:3000"
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
+
 
 settings = Settings()
+

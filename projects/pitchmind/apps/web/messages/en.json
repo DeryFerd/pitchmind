@@ -69,7 +69,33 @@
     "noAuditYet": "No audit yet — run your first GEO audit.",
     "lastAudit": "Last audit",
     "startOnboarding": "Set up your brand",
-    "viewBrand": "View brand details →"
+    "viewBrand": "View brand details →",
+    "upgradePrompt": "Upgrade your plan to continue",
+    "upgradeLink": "View plans & upgrade →"
+  },
+  "billing": {
+    "title": "Billing & usage",
+    "loginRequired": "Sign in to manage billing.",
+    "currentPlan": "Current plan",
+    "queriesUsage": "Queries this period",
+    "siteAuditsUsage": "Site audits this period",
+    "brandsUsage": "Brands",
+    "periodReset": "Usage resets on {date}",
+    "upgrade": "Upgrade",
+    "currentTier": "Current plan",
+    "loading": "Loading…",
+    "manageBilling": "Manage subscription in Stripe →",
+    "checkoutSuccess": "Payment successful! Your plan will update shortly.",
+    "checkoutCancel": "Checkout cancelled. No changes were made.",
+    "error": "Billing request failed. Try again or contact support.",
+    "plans": {
+      "pro": "Pro",
+      "proPrice": "$19/mo",
+      "proDesc": "5 brands, 200 queries/mo, weekly reports",
+      "team": "Team",
+      "teamPrice": "$49/mo",
+      "teamDesc": "20 brands, 1000 queries/mo, 3 seats"
+    }
   },
   "audit": {
     "auditDetail": "Audit results",

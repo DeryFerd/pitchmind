@@ -12,6 +12,7 @@ from pitchmind_db.seed_templates import render_templates
 
 from apps.api.deps import get_db
 from apps.api.middleware.auth import AuthUser, get_current_user
+from apps.api.services.billing import check_brand_limit
 from apps.api.schemas import (
     BrandCreate,
     BrandOut,
@@ -45,6 +46,8 @@ def create_brand(
     workspace = db.get(Workspace, body.workspace_id)
     if not workspace or workspace.owner_id != auth.id:
         raise HTTPException(status_code=403, detail="Forbidden")
+
+    check_brand_limit(db, auth.id)
 
     brand = Brand(
         id=uuid.uuid4(),
