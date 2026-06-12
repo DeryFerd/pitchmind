@@ -84,8 +84,8 @@ class GoldenQueryCreate(BaseModel):
 class AuditCreate(BaseModel):
     engines: list[str] = ["perplexity"]
     languages: list[str] = Field(default=["en", "id"])
-    include_site_audit: bool = False
-    include_action_plan: bool = False
+    include_site_audit: bool = True
+    include_action_plan: bool = True
 
 
 class AuditOut(BaseModel):
@@ -128,3 +128,5 @@ class QueryResultOut(BaseModel):
 class AuditDetail(AuditSummary):
     query_results: list[QueryResultOut] = []
     site_findings: list[SiteFindingOut] = []
+    action_plan: list[dict] = []
+    action_plan_source: str | None = None

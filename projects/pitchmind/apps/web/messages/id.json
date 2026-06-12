@@ -90,5 +90,16 @@
     "noSiteFindings": "Belum ada temuan situs.",
     "competitorChart": "Share of Model vs kompetitor",
     "competitors": "Kompetitor"
+  },
+  "actions": {
+    "title": "Rencana aksi",
+    "empty": "Belum ada rencana aksi. Jalankan audit dengan action plan aktif.",
+    "generatedBy": "Dibuat oleh {source}",
+    "template": "template engine",
+    "markDone": "Tandai selesai",
+    "copy": "Salin",
+    "copied": "Tersalin!",
+    "downloadPdf": "Unduh laporan PDF",
+    "pdfLoading": "Membuat PDF…"
   }
 }

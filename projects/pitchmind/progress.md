@@ -1,8 +1,8 @@
 # PitchMind — Progress Tracker
 
 > Last updated: 2026-06-12  
-> Current phase: **Phase 4 — Dashboard UI (DONE)**  
-> Overall progress: **~78%**
+> Current phase: **Phase 5 — Action Plan + Email (DONE)**  
+> Overall progress: **~85%**
 
 ---
 
@@ -14,7 +14,8 @@
 | Phase 2 — Geo engine | DONE |
 | Phase 3 — Site auditor | DONE |
 | Phase 4 — Dashboard UI | DONE |
-| Phase 5 — Action Plan | not_started |
+| Phase 5 — Action Plan + Email | DONE |
+| Phase 6 — Billing + Deploy | not_started |
 | Supabase / Docker / deploy | DEFERRED |
 
 ---
@@ -23,61 +24,76 @@
 
 | Phase | Name | Status | Completed |
 |-------|------|--------|-----------|
-| 0 | Documentation | **DONE** | 2026-06-11 |
-| 1 | Foundation | **DONE** | 2026-06-12 |
-| 2 | Geo Engine | **DONE** | 2026-06-12 |
-| 3 | Site Auditor | **DONE** | 2026-06-12 |
-| 4 | Dashboard UI | **DONE** | 2026-06-12 |
-| 5 | Action Plan + Email | not_started | — |
+| 0–4 | Docs → Dashboard UI | **DONE** | 2026-06-12 |
+| 5 | Action Plan + Email | **DONE** | 2026-06-12 |
 | 6 | Billing + Deploy | not_started | — |
 | 7 | Beta + Launch | not_started | — |
 
 ---
 
-## Phase 4 Checklist — DONE
+## Phase 5 Checklist — DONE
 
-### 4.1 i18n
+### 5.1 Ollama Cloud Action Plan
 
-- [x] Audit + dashboard labels (EN + ID)
-- [x] Language switcher in dashboard header
+- [x] `clients/ollama_cloud.py` — Bearer auth, host `https://ollama.com`
+- [x] `action_plan.py` — prompt → JSON items + template fallback
+- [x] Worker generates ActionPlan after audit completes
+- [x] Default model: `gpt-oss:20b-cloud` via `OLLAMA_ACTION_PLAN_MODEL`
 
-### 4.2 Dashboard Pages
+### 5.2 Action Plan UI
 
-- [x] `/dashboard` — brand cards + SoM/readiness summary
-- [x] `/dashboard/brands/[id]` — scorecard + audit history
-- [x] `/dashboard/brands/[id]/audits/[auditId]` — full audit detail
-- [x] Query results table
-- [x] Site findings checklist UI
-- [x] Competitor comparison bars
-- [x] Hallucination alert banner
+- [x] Action plan section on audit detail page
+- [x] Checkbox mark-as-done (localStorage)
+- [x] Copy suggestion buttons
 
-### 4.3 Audit UX
+### 5.3 Weekly Email
 
-- [x] Run audit + polling + redirect to audit page
-- [x] Empty states on dashboard
+- [x] Resend integration (`email.send_weekly_digest` task)
+- [x] HTML digest template EN
+- [x] Celery beat: Monday 09:00 UTC (`make beat`)
+- [x] Skips gracefully when `RESEND_API_KEY` unset
 
-### 4.4 Settings
+### 5.4 PDF Export
 
-- [ ] NOT STARTED — Brand facts, competitors, queries editor (Phase 4.4 deferred)
+- [x] `GET /api/v1/audits/{id}/export/pdf` (reportlab)
+- [x] Download button on audit detail page
+
+---
+
+## Phase 5 Exit Criteria
+
+- [x] Action plan generated for every completed audit (Ollama Cloud or template fallback)
+- [x] Weekly email task + beat schedule ready (needs Resend key for live send)
+- [x] PDF export works
+
+---
+
+## Setup (Ollama Cloud)
+
+Add to `projects/pitchmind/.env` (never commit):
+
+```
+OLLAMA_API_KEY=your-key-from-ollama.com/settings/keys
+OLLAMA_CLOUD_HOST=https://ollama.com
+OLLAMA_ACTION_PLAN_MODEL=gpt-oss:20b-cloud
+```
 
 ---
 
 ## Changelog
 
-### 2026-06-12 — Phase 4 dashboard UI
+### 2026-06-12 — Phase 5 action plan + email + PDF
 
-- DashboardHeader + LanguageSwitcher (EN/ID)
-- Brand dashboard + audit detail pages
-- ScorecardCards, CompetitorGapChart, QueryResultsTable, SiteFindingsList
-- RunAuditButton polls audit status and redirects on complete
-- API AuditDetail with query_results + site_findings
-- next-intl navigation (Link, useRouter)
+- Ollama Cloud client + action plan generator with template fallback
+- Worker persists ActionPlan; audit detail API returns action_plan
+- ActionPlanList UI (checkbox, copy), ExportPdfButton
+- Weekly digest Celery task + beat schedule
+- PDF export endpoint
+- 19 unit tests passing
 
-### 2026-06-12 — Phase 3 site auditor (DONE)
+### 2026-06-12 — Phase 4 dashboard UI (DONE)
 
-### 2026-06-12 — Phase 2 geo engine (DONE)
-
-### 2026-06-12 — Phase 1 API integration (DONE)
+### 2026-06-12 — Phases 1–3 (DONE)
 
 ---
 

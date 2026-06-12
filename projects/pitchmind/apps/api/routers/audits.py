@@ -3,6 +3,7 @@ import sys
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "packages", "db"))
@@ -21,12 +22,14 @@ from pitchmind_db.models import (
 from apps.api.deps import get_db
 from apps.api.middleware.auth import AuthUser, get_current_user
 from apps.api.schemas import AuditCreate, AuditDetail, AuditOut, AuditSummary, QueryResultOut, SiteFindingOut
+from apps.api.services.pdf_export import build_audit_pdf
 
 router = APIRouter(prefix="/api/v1", tags=["audits"])
 
 FREE_TIER_MAX_QUERIES = 5
 ESTIMATED_SECONDS_PER_QUERY = 8
 SITE_AUDIT_SECONDS = 30
+ACTION_PLAN_SECONDS = 45
 
 
 def _audit_summary(audit: AuditRun, query_count: int) -> AuditSummary:
@@ -110,11 +113,17 @@ def start_audit(
 
     from apps.worker.tasks.audit import run_visibility_audit
 
-    run_visibility_audit.delay(str(audit.id), include_site_audit=body.include_site_audit)
+    run_visibility_audit.delay(
+        str(audit.id),
+        include_site_audit=body.include_site_audit,
+        include_action_plan=body.include_action_plan,
+    )
 
     estimated = len(queries) * ESTIMATED_SECONDS_PER_QUERY
     if body.include_site_audit:
         estimated += SITE_AUDIT_SECONDS
+    if body.include_action_plan:
+        estimated += ACTION_PLAN_SECONDS
 
     return AuditOut(
         audit_id=audit.id,
@@ -168,10 +177,19 @@ def get_audit(
             site_findings.append(SiteFindingOut(**f))
 
     summary = _audit_summary(audit, len(results))
+    action_items: list[dict] = []
+    action_source = None
+    if audit.action_plan:
+        action_items = audit.action_plan.items or []
+    if audit.scorecard:
+        action_source = audit.scorecard.get("action_plan_source")
+
     return AuditDetail(
         **summary.model_dump(),
         query_results=query_results,
         site_findings=site_findings,
+        action_plan=action_items,
+        action_plan_source=action_source,
     )
 
 
@@ -211,3 +229,29 @@ def get_latest_scorecard(
     if not audit or not audit.scorecard:
         raise HTTPException(status_code=404, detail="No scorecard available")
     return {"brand_id": brand_id, "audit_id": audit.id, "scorecard": audit.scorecard}
+
+
+@router.get("/audits/{audit_id}/export/pdf")
+def export_audit_pdf(
+    audit_id: uuid.UUID,
+    auth: AuthUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    audit = db.get(AuditRun, audit_id)
+    if not audit:
+        raise HTTPException(status_code=404, detail="Audit not found")
+    brand = _get_owned_brand(db, audit.brand_id, auth)
+
+    action_items = audit.action_plan.items if audit.action_plan else []
+    pdf_bytes = build_audit_pdf(
+        brand.name,
+        str(audit_id),
+        audit.scorecard,
+        action_items,
+    )
+    filename = f"pitchmind-audit-{str(audit_id)[:8]}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )

@@ -59,6 +59,7 @@ export function RunAuditButton({ brandId, locale }: Props) {
             engines: ["perplexity"],
             languages: ["en", "id"],
             include_site_audit: true,
+            include_action_plan: true,
           }),
         },
       );

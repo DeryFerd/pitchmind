@@ -40,6 +40,14 @@ export type AuditDetail = AuditSummary & {
     message: string;
     recommendation: string | null;
   }>;
+  action_plan: Array<{
+    priority: string;
+    title: string;
+    description: string;
+    effort: string;
+    locale: string;
+  }>;
+  action_plan_source: string | null;
 };
 
 export type ScorecardResponse = {

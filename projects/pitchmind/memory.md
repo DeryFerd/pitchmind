@@ -1,6 +1,6 @@
 # PitchMind — Project Memory
 
-> Last updated: 2026-06-12 (Phase 4 complete)
+> Last updated: 2026-06-12 (Phase 5 complete)
 
 ---
 
@@ -14,53 +14,74 @@
 
 ## Stack (locked)
 
-Next.js 15 + next-intl | FastAPI | Celery + Redis | PostgreSQL | Perplexity (mock ok) | Ollama Cloud (Phase 5)
+| Layer | Choice |
+|-------|--------|
+| Frontend | Next.js 15, next-intl, Tailwind, Supabase Auth |
+| API | FastAPI, JWT |
+| Worker | Celery + Redis + Beat |
+| Visibility | Perplexity API (mock if no key) |
+| Action plan | **Ollama Cloud** — `https://ollama.com`, `gpt-oss:20b-cloud` |
+| Email | Resend (optional) |
+| PDF | reportlab |
 
 ---
 
-## Completed
+## Completed Phases (0–5)
 
-| Phase | Key deliverables |
-|-------|------------------|
-| 1 | Monorepo, auth UI, onboarding→API, CI |
-| 2 | geo-engine, audit API, Celery visibility task |
-| 3 | site-auditor, readiness score, worker chain |
-| 4 | Dashboard UI: brand page, audit detail, polling, i18n switcher |
+1. Foundation — monorepo, API, auth UI, onboarding
+2. Geo engine — Perplexity, scorer, audit API
+3. Site auditor — 7 checks, readiness score
+4. Dashboard UI — brand/audit pages, polling, i18n switcher
+5. Action plan — Ollama Cloud + template fallback, weekly email task, PDF export
 
 ---
 
-## Web routes
+## Key paths
 
 ```
-/[locale]/dashboard
-/[locale]/dashboard/brands/[id]
-/[locale]/dashboard/brands/[id]/audits/[auditId]
+packages/geo-engine/pitchmind_geo/
+  clients/ollama_cloud.py
+  action_plan.py
+apps/worker/tasks/audit.py      # chains visibility → site → action plan
+apps/worker/tasks/email.py      # weekly digest
+apps/api/services/pdf_export.py
+apps/web/components/ActionPlanList.tsx
+apps/web/components/ExportPdfButton.tsx
 ```
 
-Components: `DashboardHeader`, `LanguageSwitcher`, `ScorecardCards`, `CompetitorGapChart`, `QueryResultsTable`, `SiteFindingsList`, `RunAuditButton`
+---
+
+## Env vars (server-side only — never commit)
+
+```
+OLLAMA_API_KEY=
+OLLAMA_CLOUD_HOST=https://ollama.com
+OLLAMA_ACTION_PLAN_MODEL=gpt-oss:20b-cloud
+RESEND_API_KEY=
+RESEND_FROM=PitchMind <onboarding@resend.dev>
+```
 
 ---
 
-## Deferred
-
-- Docker + Supabase (E2E auth/DB)
-- Phase 5: Ollama Cloud action plan
-- Phase 6: Stripe, deploy
-- Settings pages (brand facts editor)
-
----
-
-## Dev
+## Dev commands
 
 ```bash
-make dev-up && make migrate && make api && make worker && make web
-pytest tests/unit/   # 17 tests, no infra
+make api && make worker && make beat && make web
+pytest tests/unit/   # 19 tests
 ```
+
+Action plan uses Ollama Cloud when `OLLAMA_API_KEY` is set; otherwise template fallback.
 
 ---
 
 ## Conventions
 
-- Strings: `messages/en.json` + `id.json`
-- i18n navigation: `@/i18n/routing` (Link, useRouter, usePathname)
-- API prefix: `/api/v1`
+- Do NOT commit API keys or add local Ollama daemon
+- Action item schema: `{ priority, title, description, effort, locale }`
+- Strings via `messages/en.json` + `id.json`
+
+---
+
+## Next: Phase 6
+
+Stripe billing, production deploy (Railway + Vercel), tier enforcement.

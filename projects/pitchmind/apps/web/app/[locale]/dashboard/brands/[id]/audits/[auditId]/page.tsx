@@ -1,5 +1,7 @@
+import { ActionPlanList } from "@/components/ActionPlanList";
 import { CompetitorGapChart } from "@/components/CompetitorGapChart";
 import { DashboardHeader } from "@/components/DashboardHeader";
+import { ExportPdfButton } from "@/components/ExportPdfButton";
 import { QueryResultsTable } from "@/components/QueryResultsTable";
 import { ScorecardCards } from "@/components/ScorecardCards";
 import { SiteFindingsList } from "@/components/SiteFindingsList";
@@ -16,6 +18,7 @@ export default async function AuditDetailPage({ params }: Props) {
   setRequestLocale(locale);
   const t = await getTranslations("audit");
   const tDash = await getTranslations("dashboard");
+  const tActions = await getTranslations("actions");
 
   const brands = await fetchUserBrands();
   const brand = brands.find((b) => b.id === id);
@@ -38,9 +41,14 @@ export default async function AuditDetailPage({ params }: Props) {
         backLabel={brand.name}
       />
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8">
-        <div className="flex flex-wrap gap-3 items-center">
-          <span className="text-xs uppercase tracking-wide text-slate-500">{audit.status}</span>
-          <span className="text-xs text-slate-600 font-mono">{auditId.slice(0, 8)}…</span>
+        <div className="flex flex-wrap gap-3 items-center justify-between">
+          <div className="flex flex-wrap gap-3 items-center">
+            <span className="text-xs uppercase tracking-wide text-slate-500">{audit.status}</span>
+            <span className="text-xs text-slate-600 font-mono">{auditId.slice(0, 8)}…</span>
+          </div>
+          {(audit.status === "completed" || audit.status === "partial") && (
+            <ExportPdfButton auditId={auditId} />
+          )}
         </div>
 
         {scorecard && (
@@ -66,6 +74,15 @@ export default async function AuditDetailPage({ params }: Props) {
             </p>
           </div>
         )}
+
+        <section>
+          <h2 className="text-lg font-semibold mb-4">{tActions("title")}</h2>
+          <ActionPlanList
+            auditId={auditId}
+            items={audit.action_plan ?? []}
+            source={audit.action_plan_source}
+          />
+        </section>
 
         <section>
           <h2 className="text-lg font-semibold mb-4">{t("visibilityTab")}</h2>

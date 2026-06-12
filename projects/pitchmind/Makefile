@@ -1,4 +1,4 @@
-.PHONY: dev-up dev-down api web worker migrate
+.PHONY: dev-up dev-down api web worker migrate beat
 
 dev-up:
 	docker compose -f infra/docker-compose.yml up -d
@@ -17,3 +17,6 @@ web:
 
 worker:
 	set PYTHONPATH=packages/db;apps&& celery -A apps.worker.celery_app worker --loglevel=info
+
+beat:
+	set PYTHONPATH=packages/db;apps&& celery -A apps.worker.celery_app beat --loglevel=info
