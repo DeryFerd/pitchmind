@@ -105,3 +105,26 @@ class AuditSummary(BaseModel):
     query_results_count: int = 0
     readiness_score: int | None = None
     site_findings_count: int = 0
+
+
+class SiteFindingOut(BaseModel):
+    check_type: str
+    severity: str
+    message: str
+    recommendation: str | None = None
+
+
+class QueryResultOut(BaseModel):
+    id: UUID
+    query_text: str
+    engine: str
+    brand_mentioned: bool
+    sentiment: str | None = None
+    citations: list | None = None
+    hallucination_flags: list | None = None
+    competitors_mentioned: dict | None = None
+
+
+class AuditDetail(AuditSummary):
+    query_results: list[QueryResultOut] = []
+    site_findings: list[SiteFindingOut] = []

@@ -1,5 +1,10 @@
+import type {
+  AuditDetail,
+  AuditSummary,
+  Brand,
+  ScorecardResponse,
+} from "@/lib/api";
 import { createClient } from "@/lib/supabase/server";
-import type { Brand, Workspace } from "@/lib/api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -18,8 +23,8 @@ async function serverApiFetch<T>(path: string): Promise<T | null> {
   return res.json() as Promise<T>;
 }
 
-export async function fetchWorkspaces(): Promise<Workspace[]> {
-  return (await serverApiFetch<Workspace[]>("/api/v1/workspaces")) ?? [];
+export async function fetchWorkspaces() {
+  return (await serverApiFetch<{ id: string; name: string }[]>("/api/v1/workspaces")) ?? [];
 }
 
 export async function fetchBrands(workspaceId: string): Promise<Brand[]> {
@@ -31,4 +36,16 @@ export async function fetchUserBrands(): Promise<Brand[]> {
   if (workspaces.length === 0) return [];
   const brands = await Promise.all(workspaces.map((w) => fetchBrands(w.id)));
   return brands.flat();
+}
+
+export async function fetchBrandAudits(brandId: string): Promise<AuditSummary[]> {
+  return (await serverApiFetch<AuditSummary[]>(`/api/v1/brands/${brandId}/audits`)) ?? [];
+}
+
+export async function fetchAuditDetail(auditId: string): Promise<AuditDetail | null> {
+  return serverApiFetch<AuditDetail>(`/api/v1/audits/${auditId}`);
+}
+
+export async function fetchLatestScorecard(brandId: string): Promise<ScorecardResponse | null> {
+  return serverApiFetch<ScorecardResponse>(`/api/v1/brands/${brandId}/scorecard`);
 }

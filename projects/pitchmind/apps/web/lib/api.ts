@@ -11,6 +11,43 @@ export type Brand = {
   description: string | null;
 };
 
+export type AuditSummary = {
+  audit_id: string;
+  brand_id: string;
+  status: string;
+  scorecard: Record<string, unknown> | null;
+  started_at: string | null;
+  completed_at: string | null;
+  query_results_count: number;
+  readiness_score: number | null;
+  site_findings_count: number;
+};
+
+export type AuditDetail = AuditSummary & {
+  query_results: Array<{
+    id: string;
+    query_text: string;
+    engine: string;
+    brand_mentioned: boolean;
+    sentiment: string | null;
+    citations: string[] | null;
+    hallucination_flags: Array<Record<string, unknown>> | null;
+    competitors_mentioned: Record<string, boolean> | null;
+  }>;
+  site_findings: Array<{
+    check_type: string;
+    severity: string;
+    message: string;
+    recommendation: string | null;
+  }>;
+};
+
+export type ScorecardResponse = {
+  brand_id: string;
+  audit_id: string;
+  scorecard: Record<string, unknown>;
+};
+
 export class ApiError extends Error {
   constructor(
     message: string,

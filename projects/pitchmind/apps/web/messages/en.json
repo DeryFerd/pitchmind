@@ -61,7 +61,34 @@
     "yourBrands": "Your brands",
     "runAudit": "Run audit",
     "auditRunning": "Starting audit...",
-    "auditStarted": "Audit queued ({id}...). Results appear when the worker completes.",
-    "auditError": "Could not start audit. Check API and worker are running."
+    "auditPolling": "Audit in progress…",
+    "auditProgress": "Processing… {count} queries done",
+    "auditStarted": "Audit queued ({id}...). Refresh when worker completes.",
+    "auditFailed": "Audit failed. Check worker logs.",
+    "auditError": "Could not start audit. Check API and worker are running.",
+    "noAuditYet": "No audit yet — run your first GEO audit.",
+    "lastAudit": "Last audit",
+    "startOnboarding": "Set up your brand",
+    "viewBrand": "View brand details →"
+  },
+  "audit": {
+    "auditDetail": "Audit results",
+    "auditHistory": "Audit history",
+    "noAudits": "No audits yet.",
+    "visibilityTab": "AI visibility",
+    "siteTab": "Site readiness",
+    "queryCol": "Query",
+    "engineCol": "Engine",
+    "mentionedCol": "Mentioned",
+    "sentimentCol": "Sentiment",
+    "flagsCol": "Flags",
+    "yes": "Yes",
+    "no": "No",
+    "hallucinationCount": "{count} flag(s)",
+    "hallucinationAlert": "{count} hallucination flag(s) detected in AI responses.",
+    "noQueryResults": "No query results yet.",
+    "noSiteFindings": "No site findings.",
+    "competitorChart": "Share of Model vs competitors",
+    "competitors": "Competitors"
   }
 }

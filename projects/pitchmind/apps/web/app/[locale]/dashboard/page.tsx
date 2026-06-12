@@ -1,5 +1,8 @@
+import { DashboardHeader } from "@/components/DashboardHeader";
 import { RunAuditButton } from "@/components/RunAuditButton";
-import { fetchUserBrands } from "@/lib/api-server";
+import { ScorecardCards } from "@/components/ScorecardCards";
+import { Link } from "@/i18n/routing";
+import { fetchBrandAudits, fetchLatestScorecard, fetchUserBrands } from "@/lib/api-server";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 type Props = { params: Promise<{ locale: string }> };
@@ -10,48 +13,58 @@ export default async function DashboardPage({ params }: Props) {
   const t = await getTranslations("dashboard");
   const brands = await fetchUserBrands();
 
+  const brandsWithScore = await Promise.all(
+    brands.map(async (brand) => {
+      const sc = await fetchLatestScorecard(brand.id);
+      const audits = await fetchBrandAudits(brand.id);
+      return { brand, scorecard: sc?.scorecard ?? null, latestAudit: audits[0] ?? null };
+    }),
+  );
+
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-800 px-6 py-4 flex justify-between items-center">
-        <span className="font-bold text-indigo-400">PitchMind</span>
-        <span className="text-sm text-slate-400">{t("title")}</span>
-      </header>
-      <main className="max-w-4xl mx-auto px-6 py-12">
+      <DashboardHeader title={t("title")} />
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {brands.length === 0 ? (
-          <p className="text-slate-400 mb-8">{t("empty")}</p>
+          <div className="text-center py-16">
+            <p className="text-slate-400 mb-4">{t("empty")}</p>
+            <Link href="/onboarding" className="text-indigo-400 hover:underline">
+              {t("startOnboarding")}
+            </Link>
+          </div>
         ) : (
-          <div className="space-y-4 mb-8">
+          <div className="space-y-6">
             <h2 className="text-lg font-semibold">{t("yourBrands")}</h2>
-            {brands.map((brand) => (
+            {brandsWithScore.map(({ brand, scorecard, latestAudit }) => (
               <div
                 key={brand.id}
-                className="border border-slate-800 rounded-xl p-6 bg-slate-900/50"
+                className="border border-slate-800 rounded-xl p-4 sm:p-6 bg-slate-900/50 space-y-4"
               >
-                <h3 className="text-xl font-bold text-indigo-300">{brand.name}</h3>
-                <a
-                  href={brand.website_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-slate-400 hover:text-indigo-400"
-                >
-                  {brand.website_url}
-                </a>
-                {brand.description && (
-                  <p className="mt-2 text-slate-300 text-sm">{brand.description}</p>
+                <div className="flex flex-wrap justify-between gap-3 items-start">
+                  <div>
+                    <Link
+                      href={`/dashboard/brands/${brand.id}`}
+                      className="text-xl font-bold text-indigo-300 hover:underline"
+                    >
+                      {brand.name}
+                    </Link>
+                    <p className="text-sm text-slate-400 mt-1">{brand.website_url}</p>
+                  </div>
+                  {latestAudit && (
+                    <span className="text-xs uppercase tracking-wide text-slate-500">
+                      {t("lastAudit")}: {latestAudit.status}
+                    </span>
+                  )}
+                </div>
+                {scorecard ? (
+                  <ScorecardCards scorecard={scorecard as Record<string, unknown>} />
+                ) : (
+                  <p className="text-sm text-slate-500">{t("noAuditYet")}</p>
                 )}
+                <RunAuditButton brandId={brand.id} locale={locale} />
               </div>
             ))}
           </div>
-        )}
-        {brands.length > 0 ? (
-          <RunAuditButton brandId={brands[0].id} />
-        ) : (
-          <button
-            className="bg-indigo-600 hover:bg-indigo-500 px-6 py-2 rounded-lg opacity-50 cursor-not-allowed"
-            disabled
-          >
-            {t("runAudit")}
-          </button>
         )}
       </main>
     </div>

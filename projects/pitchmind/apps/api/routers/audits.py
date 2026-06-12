@@ -11,6 +11,7 @@ from pitchmind_db.models import (
     AuditRun,
     AuditStatus,
     Brand,
+    GoldenQuery,
     QueryResult,
     Subscription,
     SubscriptionTier,
@@ -19,7 +20,7 @@ from pitchmind_db.models import (
 
 from apps.api.deps import get_db
 from apps.api.middleware.auth import AuthUser, get_current_user
-from apps.api.schemas import AuditCreate, AuditOut, AuditSummary
+from apps.api.schemas import AuditCreate, AuditDetail, AuditOut, AuditSummary, QueryResultOut, SiteFindingOut
 
 router = APIRouter(prefix="/api/v1", tags=["audits"])
 
@@ -123,7 +124,7 @@ def start_audit(
     )
 
 
-@router.get("/audits/{audit_id}", response_model=AuditSummary)
+@router.get("/audits/{audit_id}", response_model=AuditDetail)
 def get_audit(
     audit_id: uuid.UUID,
     auth: AuthUser = Depends(get_current_user),
@@ -135,7 +136,43 @@ def get_audit(
     _get_owned_brand(db, audit.brand_id, auth)
 
     results = db.query(QueryResult).filter(QueryResult.audit_run_id == audit_id).all()
-    return _audit_summary(audit, len(results))
+    query_results: list[QueryResultOut] = []
+    for qr in results:
+        gq = db.get(GoldenQuery, qr.query_id)
+        query_results.append(
+            QueryResultOut(
+                id=qr.id,
+                query_text=gq.text if gq else "",
+                engine=qr.engine,
+                brand_mentioned=qr.brand_mentioned,
+                sentiment=qr.sentiment,
+                citations=qr.citations,
+                hallucination_flags=qr.hallucination_flags,
+                competitors_mentioned=qr.competitors_mentioned,
+            )
+        )
+
+    site_findings: list[SiteFindingOut] = []
+    if audit.site_audit:
+        for f in audit.site_audit.findings:
+            site_findings.append(
+                SiteFindingOut(
+                    check_type=f.check_type,
+                    severity=f.severity,
+                    message=f.message,
+                    recommendation=f.recommendation,
+                )
+            )
+    elif audit.scorecard and audit.scorecard.get("site_findings"):
+        for f in audit.scorecard["site_findings"]:
+            site_findings.append(SiteFindingOut(**f))
+
+    summary = _audit_summary(audit, len(results))
+    return AuditDetail(
+        **summary.model_dump(),
+        query_results=query_results,
+        site_findings=site_findings,
+    )
 
 
 @router.get("/brands/{brand_id}/audits", response_model=list[AuditSummary])

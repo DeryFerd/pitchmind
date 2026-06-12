@@ -61,7 +61,34 @@
     "yourBrands": "Brand Anda",
     "runAudit": "Jalankan audit",
     "auditRunning": "Memulai audit...",
-    "auditStarted": "Audit dalam antrian ({id}...). Hasil muncul setelah worker selesai.",
-    "auditError": "Gagal memulai audit. Pastikan API dan worker berjalan."
+    "auditPolling": "Audit berjalan…",
+    "auditProgress": "Memproses… {count} query selesai",
+    "auditStarted": "Audit dalam antrian ({id}...). Refresh setelah worker selesai.",
+    "auditFailed": "Audit gagal. Periksa log worker.",
+    "auditError": "Gagal memulai audit. Pastikan API dan worker berjalan.",
+    "noAuditYet": "Belum ada audit — jalankan audit GEO pertama.",
+    "lastAudit": "Audit terakhir",
+    "startOnboarding": "Atur brand Anda",
+    "viewBrand": "Lihat detail brand →"
+  },
+  "audit": {
+    "auditDetail": "Hasil audit",
+    "auditHistory": "Riwayat audit",
+    "noAudits": "Belum ada audit.",
+    "visibilityTab": "Visibilitas AI",
+    "siteTab": "Kesiapan situs",
+    "queryCol": "Query",
+    "engineCol": "Engine",
+    "mentionedCol": "Disebut",
+    "sentimentCol": "Sentimen",
+    "flagsCol": "Flag",
+    "yes": "Ya",
+    "no": "Tidak",
+    "hallucinationCount": "{count} flag",
+    "hallucinationAlert": "{count} flag halusinasi terdeteksi dalam respons AI.",
+    "noQueryResults": "Belum ada hasil query.",
+    "noSiteFindings": "Belum ada temuan situs.",
+    "competitorChart": "Share of Model vs kompetitor",
+    "competitors": "Kompetitor"
   }
 }
