@@ -1,0 +1,61 @@
+{
+  "meta": {
+    "title": "PitchMind — Audit GEO untuk Pencarian AI",
+    "description": "Tahu apakah ChatGPT dan Perplexity merekomendasikan brand Anda"
+  },
+  "nav": {
+    "features": "Fitur",
+    "pricing": "Harga",
+    "login": "Masuk",
+    "signup": "Mulai gratis"
+  },
+  "hero": {
+    "title": "Apakah AI merekomendasikan brand Anda?",
+    "subtitle": "Ukur visibilitas di ChatGPT, Perplexity, dan Gemini. Perbaiki informasi salah tentang brand Anda.",
+    "cta": "Mulai audit gratis",
+    "ctaSecondary": "Lihat cara kerjanya"
+  },
+  "features": {
+    "title": "Dibuat untuk era pencarian AI",
+    "visibility": "Skor Visibilitas AI",
+    "visibilityDesc": "Share of Model dari query emas dalam EN dan ID",
+    "hallucination": "Deteksi Halusinasi",
+    "hallucinationDesc": "Tangkap saat AI menyebut harga atau fakta yang salah",
+    "site": "Kesiapan Situs AI",
+    "siteDesc": "Audit llms.txt, schema, akses bot",
+    "action": "Rencana Aksi",
+    "actionDesc": "Perbaikan GEO prioritas via Ollama Cloud"
+  },
+  "pricing": {
+    "title": "Harga sederhana",
+    "free": "Gratis",
+    "freePrice": "$0",
+    "pro": "Pro",
+    "proPrice": "$19/bulan",
+    "team": "Tim",
+    "teamPrice": "$49/bulan"
+  },
+  "auth": {
+    "loginTitle": "Selamat datang kembali",
+    "signupTitle": "Buat akun Anda",
+    "email": "Email",
+    "password": "Kata sandi",
+    "loginBtn": "Masuk",
+    "signupBtn": "Daftar",
+    "googleBtn": "Lanjutkan dengan Google"
+  },
+  "onboarding": {
+    "title": "Atur brand Anda",
+    "brandName": "Nama brand",
+    "website": "URL website",
+    "description": "Deskripsi singkat",
+    "competitor1": "Kompetitor 1",
+    "competitor2": "Kompetitor 2",
+    "next": "Lanjut ke dashboard"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "empty": "Belum ada brand. Selesaikan onboarding untuk audit GEO pertama.",
+    "runAudit": "Jalankan audit"
+  }
+}

@@ -6,20 +6,22 @@ Bilingual EN + ID | Ollama Cloud + Perplexity API | Full-stack production portfo
 
 ## Status
 
-Pre-development — documentation complete, implementation starting Phase 1.
+**Phase 1 in progress** — monorepo scaffolded, API + web foundation, DB migrations ready.
 
 ## Repository structure
 
 ```
-├── docs/                    # Portfolio research (AI/ML trends 2026)
-├── projects/pitchmind/      # PitchMind product docs
-│   ├── PRD.md
-│   ├── system-design.md
-│   ├── Plan.md
-│   ├── progress.md
-│   ├── memory.md
-│   └── handoff.md
-└── README.md
+├── docs/                         # Portfolio research (AI/ML trends 2026)
+├── projects/pitchmind/
+│   ├── PRD.md, system-design.md, Plan.md, progress.md, memory.md, handoff.md
+│   ├── apps/web/                 # Next.js 15 + next-intl (EN/ID)
+│   ├── apps/api/                 # FastAPI
+│   ├── apps/worker/              # Celery skeleton
+│   ├── packages/db/              # SQLAlchemy + Alembic
+│   ├── packages/geo-engine/      # Phase 2
+│   ├── infra/docker-compose.yml
+│   └── Makefile
+└── .github/workflows/ci.yml
 ```
 
 ## PitchMind docs

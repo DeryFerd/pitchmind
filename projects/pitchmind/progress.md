@@ -1,8 +1,8 @@
 # PitchMind — Progress Tracker
 
 > Last updated: 2026-06-11  
-> Current phase: **Phase 0 — Documentation**  
-> Overall progress: **~20%** (docs complete + Ollama Cloud stack decision)
+> Current phase: **Phase 1 — Foundation (partial)**  
+> Overall progress: **~45%**
 
 ---
 
@@ -10,13 +10,21 @@
 
 | Item | Status |
 |------|--------|
-| PRD | Done |
-| System Design | Done |
-| Plan | Done |
-| memory.md | Empty (by design) |
-| handoff.md | Empty (by design) |
-| Monorepo scaffold | Not started |
-| Production URL | Not deployed |
+| PRD | DONE |
+| System Design | DONE |
+| Plan | DONE |
+| GitHub repo | DONE — https://github.com/DeryFerd/pitchmind |
+| Monorepo scaffold | DONE |
+| Database models + migration | DONE |
+| FastAPI (basic endpoints) | DONE |
+| Celery worker skeleton | DONE |
+| Next.js web (landing, auth, onboarding, dashboard) | DONE |
+| docker-compose (postgres + redis) | DONE |
+| CI GitHub Actions | DONE |
+| Supabase project wired | NOT STARTED (needs user keys) |
+| Migrations run on real DB | NOT STARTED |
+| API deployed staging | NOT STARTED |
+| Production URL | NOT STARTED |
 
 ---
 
@@ -24,37 +32,69 @@
 
 | Phase | Name | Status | Started | Completed | Notes |
 |-------|------|--------|---------|-----------|-------|
-| 0 | Documentation | **done** | 2026-06-11 | 2026-06-11 | All 6 doc files created |
-| 1 | Foundation | not_started | — | — | Next: monorepo + auth |
+| 0 | Documentation | **DONE** | 2026-06-11 | 2026-06-11 | |
+| 1 | Foundation | **in_progress** | 2026-06-11 | — | ~70% of Phase 1 tasks |
 | 2 | Geo Engine | not_started | — | — | |
 | 3 | Site Auditor | not_started | — | — | |
-| 4 | Dashboard UI | not_started | — | — | |
+| 4 | Dashboard UI | not_started | — | — | shell only |
 | 5 | Action Plan + Email | not_started | — | — | |
 | 6 | Billing + Deploy | not_started | — | — | |
 | 7 | Beta + Launch | not_started | — | — | |
 
 ---
 
-## Current Sprint (Phase 0 -> 1 transition)
+## Phase 1 Checklist
 
-### Done
+### 1.1 Monorepo Scaffold
 
-- [x] Select PitchMind (GEO) from portfolio research Tier 2
-- [x] Confirm target market: hybrid EN + ID
-- [x] Write PRD.md
-- [x] Write system-design.md
-- [x] Write Plan.md
-- [x] Write progress.md (this file)
-- [x] Create memory.md (empty placeholder)
-- [x] Create handoff.md (empty placeholder)
+- [x] DONE — Git repo + GitHub push
+- [x] DONE — `apps/web` Next.js 15 + TypeScript + Tailwind
+- [x] DONE — `apps/api` FastAPI
+- [x] DONE — `apps/worker` Celery skeleton
+- [x] DONE — `packages/geo-engine`, `site-auditor`, `harness`, `db`
+- [x] DONE — `infra/docker-compose.yml` (postgres + redis)
+- [x] DONE — `pyproject.toml` + Ruff config
+- [x] DONE — `.env.example`
+- [x] DONE — `Makefile` dev commands
 
-### Up Next
+### 1.2 Database
 
-- [ ] Self-review PRD + system-design
-- [ ] Initialize monorepo (`apps/web`, `apps/api`, `apps/worker`)
-- [ ] Create Supabase project
-- [ ] First Alembic migration
-- [ ] Landing page + auth flow
+- [x] DONE — Alembic setup
+- [x] DONE — Migration 001 (all tables)
+- [x] DONE — Seed templates EN + ID (saas, local, ecom)
+- [ ] NOT STARTED — Run migration on live DB
+
+### 1.3 Auth
+
+- [x] DONE — Web Supabase client + SSR helpers
+- [x] DONE — API JWT middleware (Supabase)
+- [x] DONE — Login / signup / OAuth callback pages
+- [ ] NOT STARTED — Create Supabase project + env keys
+- [ ] NOT STARTED — Auto-create workspace on first API call (code ready, needs live test)
+- [ ] NOT STARTED — Protected route middleware (web)
+
+### 1.4 Basic API
+
+- [x] DONE — `GET /health`
+- [x] DONE — `POST /api/v1/workspaces`
+- [x] DONE — `POST /api/v1/brands` + `PATCH`
+- [x] DONE — `POST /api/v1/brands/{id}/competitors`
+- [x] DONE — `GET/POST /api/v1/brands/{id}/queries`
+- [x] DONE — `POST /api/v1/brands/{id}/queries/seed`
+
+### 1.5 Basic Web
+
+- [x] DONE — Landing page EN + ID
+- [x] DONE — Auth pages (login, signup, callback)
+- [x] DONE — Onboarding wizard (localStorage stub — API wire pending)
+- [x] DONE — Dashboard shell
+
+### 1.6 CI/CD
+
+- [x] DONE — GitHub Actions lint + build
+- [x] DONE — API Dockerfile + railway.toml
+- [ ] NOT STARTED — Railway deploy
+- [ ] NOT STARTED — Vercel deploy
 
 ---
 
@@ -62,65 +102,32 @@
 
 | Blocker | Owner | Since | Resolution |
 |---------|-------|-------|------------|
-| None | — | — | — |
-
----
-
-## Metrics (post-launch targets)
-
-| Metric | Target | Current |
-|--------|--------|---------|
-| Registered users | 100 | 0 |
-| Beta users (1+ audit) | 10 | 0 |
-| Paying Pro users | 5 | 0 |
-| Audit completion rate | >90% | — |
-| Avg audit duration | <5 min | — |
-| Citation detection precision | >80% | — |
-| Free -> Pro conversion | >5% | — |
-| Monthly infra cost | <$45 | $0 |
-
----
-
-## Decisions Log
-
-| Date | Decision | Rationale |
-|------|----------|-----------|
-| 2026-06-11 | Project: PitchMind GEO (#4 from research) | Niche 2026, portfolio differentiation, hybrid EN+ID market gap |
-| 2026-06-11 | Perplexity as primary AI engine | Has citations API; ChatGPT no bulk API |
-| 2026-06-11 | **Ollama Cloud** for action plans (not local SLM) | No GPU on Railway; same ollama-python SDK; Pro $20/mo quota; models `gpt-oss:20b-cloud`, `qwen3.5:cloud` |
-| 2026-06-11 | Supabase + Stripe + Railway stack | Matches portfolio research default stack |
-| 2026-06-11 | memory.md + handoff.md left empty until dev starts | Per project setup request |
+| Supabase keys not configured | User | 2026-06-11 | Create project, copy to `.env` |
+| DB migration not run | Dev | 2026-06-11 | `make dev-up` then `make migrate` |
 
 ---
 
 ## Changelog
 
-### 2026-06-11 (update)
+### 2026-06-11 — Phase 1 scaffold
 
-- **Stack change:** Local Ollama SLM -> **Ollama Cloud** managed inference
-  - API: `https://ollama.com` + `OLLAMA_API_KEY`
-  - Models: `gpt-oss:20b-cloud` (action plan), `qwen3.5:cloud` (deep analysis)
-  - Removed: Railway Ollama sidecar / local GPU requirement
-  - Added: Ollama Cloud Pro ($20/mo) for production quota
-- Updated: PRD.md, system-design.md, Plan.md, progress.md
+- Monorepo: apps/web, apps/api, apps/worker, packages/*
+- SQLAlchemy models + Alembic migration 001
+- FastAPI endpoints: workspaces, brands, competitors, queries, seed
+- Next.js 15 + next-intl (EN/ID): landing, login, signup, onboarding, dashboard
+- Celery audit task placeholder
+- docker-compose, Makefile, CI workflow, API Dockerfile
+- Web build verified (`npm run build` pass)
 
-### 2026-06-11
+### 2026-06-11 — Docs + repo
 
-- Project kickoff from [AI Portfolio Research 2026](../../docs/AI-Portfolio-Research-2026.md)
-- Created pre-development documentation set in `projects/pitchmind/`:
-  - PRD.md
-  - system-design.md
-  - Plan.md
-  - progress.md
-  - memory.md (empty)
-  - handoff.md (empty)
-- Phase 0 marked complete; ready for Phase 1 (Foundation)
+- GitHub: https://github.com/DeryFerd/pitchmind
+- Ollama Cloud stack decision documented
 
 ---
 
 ## Links
 
-- [PRD](./PRD.md)
-- [System Design](./system-design.md)
-- [Plan](./Plan.md)
-- [Portfolio Research](../../docs/AI-Portfolio-Research-2026.md)
+- [PRD](./PRD.md) | [System Design](./system-design.md) | [Plan](./Plan.md)
+- [handoff.md](./handoff.md) | [memory.md](./memory.md)
+- Repo: https://github.com/DeryFerd/pitchmind

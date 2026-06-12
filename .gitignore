@@ -16,6 +16,9 @@ venv/
 # Node
 node_modules/
 .next/
+projects/pitchmind/apps/web/node_modules/
+projects/pitchmind/apps/web/.next/
+.next/
 out/
 dist/
 .turbo/
