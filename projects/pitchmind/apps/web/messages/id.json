@@ -51,6 +51,15 @@
     "description": "Deskripsi singkat",
     "competitor1": "Kompetitor 1",
     "competitor2": "Kompetitor 2",
+    "monthlyPrice": "Harga bulanan (USD, untuk cek halusinasi)",
+    "features": "Fitur utama (pisahkan koma)",
+    "location": "Lokasi kantor",
+    "foundedYear": "Tahun didirikan",
+    "factsHint": "Fakta ground truth membantu mendeteksi halusinasi AI.",
+    "queryTemplate": "Template query emas",
+    "templateSaas": "SaaS / software",
+    "templateLocal": "Jasa lokal",
+    "templateEcom": "E-commerce",
     "next": "Lanjut ke dashboard",
     "saving": "Menyimpan...",
     "error": "Terjadi kesalahan. Periksa koneksi Anda dan coba lagi."
@@ -71,7 +80,8 @@
     "startOnboarding": "Atur brand Anda",
     "viewBrand": "Lihat detail brand →",
     "upgradePrompt": "Upgrade paket untuk melanjutkan",
-    "upgradeLink": "Lihat paket & upgrade →"
+    "upgradeLink": "Lihat paket & upgrade →",
+    "brandSettings": "Pengaturan brand →"
   },
   "billing": {
     "title": "Tagihan & penggunaan",
@@ -115,7 +125,44 @@
     "noQueryResults": "Belum ada hasil query.",
     "noSiteFindings": "Belum ada temuan situs.",
     "competitorChart": "Share of Model vs kompetitor",
-    "competitors": "Kompetitor"
+    "competitors": "Kompetitor",
+    "hallucinationPricing": "Harga tidak cocok: AI bilang ${stated}, seharusnya ${expected}",
+    "hallucinationLocation": "Lokasi tidak cocok: AI bilang \"{stated}\", seharusnya \"{expected}\"",
+    "hallucinationYear": "Tahun berdiri tidak cocok: AI bilang {stated}, seharusnya {expected}",
+    "hallucinationFeature": "Fitur fiktif: \"{stated}\"",
+    "hallucinationGeneric": "Flag: {type}"
+  },
+  "brandSettings": {
+    "title": "Pengaturan brand",
+    "factsTitle": "Fakta brand (ground truth)",
+    "factsDesc": "Digunakan mendeteksi harga, lokasi, atau fitur salah dari AI.",
+    "monthlyPrice": "Harga bulanan (USD)",
+    "location": "Lokasi",
+    "foundedYear": "Tahun didirikan",
+    "features": "Fitur (pisahkan koma)",
+    "saveFacts": "Simpan fakta",
+    "saving": "Menyimpan…",
+    "saved": "Fakta brand disimpan.",
+    "error": "Gagal menyimpan. Coba lagi.",
+    "competitorsTitle": "Kompetitor",
+    "addCompetitor": "Nama kompetitor",
+    "add": "Tambah",
+    "remove": "Hapus",
+    "queriesTitle": "Golden queries",
+    "queryCount": "{count} query dimuat",
+    "templateSaas": "SaaS",
+    "templateLocal": "Lokal",
+    "templateEcom": "E-commerce",
+    "reseedQueries": "Tambah query template (append)",
+    "customQuery": "Teks query kustom"
+  },
+  "emailPrefs": {
+    "title": "Preferensi email",
+    "desc": "Ringkasan GEO mingguan dikirim ke paket Pro dan Tim setiap Senin.",
+    "weeklyDigest": "Terima email mingguan",
+    "enabled": "Email mingguan diaktifkan.",
+    "disabled": "Email mingguan dinonaktifkan.",
+    "unsubscribed": "Anda berhenti berlangganan email mingguan."
   },
   "actions": {
     "title": "Rencana aksi",

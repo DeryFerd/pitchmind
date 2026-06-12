@@ -66,8 +66,10 @@ def _add_brand(db: Session, user_id: uuid.UUID, name: str = "Acme") -> Brand:
 def test_free_tier_limits():
     limits = get_tier_limits(SubscriptionTier.FREE)
     assert limits.max_brands == 1
+    assert limits.max_competitors == 2
     assert limits.queries_per_month == 10
     assert limits.queries_per_audit == 5
+    assert limits.weekly_email is False
 
 
 def test_brand_limit_blocks_second_brand(db: Session):

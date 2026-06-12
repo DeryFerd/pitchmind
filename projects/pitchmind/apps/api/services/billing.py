@@ -9,35 +9,43 @@ from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-from pitchmind_db.models import Brand, Subscription, SubscriptionTier, User, Workspace
+from pitchmind_db.models import Brand, Competitor, Subscription, SubscriptionTier, User, Workspace
 
 
 @dataclass(frozen=True)
 class TierLimits:
     max_brands: int
+    max_competitors: int
     queries_per_month: int
     queries_per_audit: int
     site_audits_per_month: int
+    weekly_email: bool
 
 
 TIER_LIMITS: dict[SubscriptionTier, TierLimits] = {
     SubscriptionTier.FREE: TierLimits(
         max_brands=1,
+        max_competitors=2,
         queries_per_month=10,
         queries_per_audit=5,
         site_audits_per_month=1,
+        weekly_email=False,
     ),
     SubscriptionTier.PRO: TierLimits(
         max_brands=5,
+        max_competitors=5,
         queries_per_month=200,
         queries_per_audit=50,
         site_audits_per_month=4,
+        weekly_email=True,
     ),
     SubscriptionTier.TEAM: TierLimits(
         max_brands=20,
+        max_competitors=5,
         queries_per_month=1000,
         queries_per_audit=100,
         site_audits_per_month=20,
+        weekly_email=True,
     ),
 }
 
@@ -96,6 +104,28 @@ def count_user_brands(db: Session, user_id: UUID) -> int:
         .filter(Workspace.owner_id == user_id)
         .count()
     )
+
+
+def check_competitor_limit(db: Session, user_id: UUID, brand_id: UUID) -> None:
+    sub = get_or_create_subscription(db, user_id)
+    limits = get_tier_limits(sub.tier)
+    count = db.query(Competitor).filter(Competitor.brand_id == brand_id).count()
+    if count >= limits.max_competitors:
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail=(
+                f"{sub.tier.value.title()} tier limited to {limits.max_competitors} "
+                f"competitors per brand. Upgrade for more."
+            ),
+        )
+
+
+def user_receives_weekly_email(db: Session, user_id: UUID) -> bool:
+    sub = get_or_create_subscription(db, user_id)
+    user = db.get(User, user_id)
+    if not user or not user.email_digest_enabled:
+        return False
+    return get_tier_limits(sub.tier).weekly_email
 
 
 def check_brand_limit(db: Session, user_id: UUID) -> None:

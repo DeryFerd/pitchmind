@@ -23,6 +23,7 @@ from pitchmind_db.models import (
     SiteAudit,
 )
 from pitchmind_geo.action_plan import generate_action_plan
+from pitchmind_geo.clients.perplexity import ESTIMATED_COST_PER_QUERY_USD
 from pitchmind_geo.hallucination import BrandFactsData
 from pitchmind_geo.runner import GoldenQueryInput, run_visibility_batch
 from pitchmind_geo.scorer import QueryResultData, compute_scorecard
@@ -185,6 +186,8 @@ def run_visibility_audit(
             scorecard["action_plan_source"] = action_plan_source
 
         audit.status = final_status
+        scorecard["estimated_cost_usd"] = round(completed * ESTIMATED_COST_PER_QUERY_USD, 2)
+        scorecard["queries_completed"] = completed
 
         audit.scorecard = scorecard
         audit.completed_at = datetime.now(UTC)

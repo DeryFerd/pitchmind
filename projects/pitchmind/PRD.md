@@ -2,7 +2,7 @@
 
 > Version: 1.0  
 > Last updated: 2026-06-11  
-> Status: Pre-development  
+> Status: MVP ~95% — core product complete; deploy + beta pending  
 > Owner: Full-stack AI SaaS Portfolio
 
 ---

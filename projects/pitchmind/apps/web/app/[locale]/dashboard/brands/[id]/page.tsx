@@ -31,16 +31,24 @@ export default async function BrandDashboardPage({ params }: Props) {
         backLabel={t("title")}
       />
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8">
-        <div>
-          <h1 className="text-2xl font-bold text-indigo-300">{brand.name}</h1>
-          <a
-            href={brand.website_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-slate-400 hover:text-indigo-400"
+        <div className="flex flex-wrap justify-between gap-3 items-start">
+          <div>
+            <h1 className="text-2xl font-bold text-indigo-300">{brand.name}</h1>
+            <a
+              href={brand.website_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-slate-400 hover:text-indigo-400"
+            >
+              {brand.website_url}
+            </a>
+          </div>
+          <Link
+            href={`/dashboard/brands/${id}/settings`}
+            className="text-sm text-indigo-400 hover:underline"
           >
-            {brand.website_url}
-          </a>
+            {t("brandSettings")}
+          </Link>
         </div>
 
         {scorecard ? (

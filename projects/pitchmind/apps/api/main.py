@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "packages
 
 from apps.api.config import settings
 from apps.api.middleware.rate_limit import RateLimitMiddleware
-from apps.api.routers import audits, billing, brands, webhooks, workspaces
+from apps.api.routers import account, audits, billing, brands, webhooks, workspaces
 
 app = FastAPI(
     title="PitchMind API",
@@ -27,6 +27,7 @@ app.add_middleware(
 app.add_middleware(RateLimitMiddleware)
 
 app.include_router(workspaces.router)
+app.include_router(account.router)
 app.include_router(brands.router)
 app.include_router(audits.router)
 app.include_router(billing.router)

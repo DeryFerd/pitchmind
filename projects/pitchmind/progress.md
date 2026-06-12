@@ -1,8 +1,8 @@
 # PitchMind — Progress Tracker
 
 > Last updated: 2026-06-12  
-> Current phase: **Phase 6 — Billing + Deploy (code DONE, deploy pending)**  
-> Overall progress: **~92%**
+> Current phase: **MVP product complete — deploy + beta pending**  
+> Overall progress: **~95%**
 
 ---
 
@@ -10,91 +10,53 @@
 
 | Item | Status |
 |------|--------|
-| Phase 1 — Foundation | DONE |
-| Phase 2 — Geo engine | DONE |
-| Phase 3 — Site auditor | DONE |
-| Phase 4 — Dashboard UI | DONE |
-| Phase 5 — Action Plan + Email | DONE |
-| Phase 6 — Billing (code) | **DONE** |
-| Phase 6 — Production deploy | not_started |
-| Phase 7 — Beta + Launch | not_started |
+| Phases 1–5 (core product) | DONE |
+| Phase 6 billing (code) | DONE (Stripe live skipped) |
+| MVP gap fill (settings, facts, email, SSE) | **DONE** |
+| Production deploy | not_started |
+| Phase 7 beta + launch | not_started |
 
 ---
 
-## Phase Status
+## Latest: MVP gap fill (2026-06-12)
 
-| Phase | Name | Status | Completed |
-|-------|------|--------|-----------|
-| 0–5 | Docs → Action Plan + Email | **DONE** | 2026-06-12 |
-| 6 | Billing + Deploy | **code DONE / deploy pending** | 2026-06-12 |
-| 7 | Beta + Launch | not_started | — |
+### Product polish — DONE
 
----
+- [x] Brand facts in onboarding (pricing, features, location)
+- [x] Query template picker (saas / local / ecom)
+- [x] 25 golden queries per template (13 EN + 12 ID)
+- [x] Brand settings page (`/dashboard/brands/[id]/settings`)
+- [x] Competitor + custom query management
+- [x] Competitor limit per tier (2 free / 5 pro+)
+- [x] Hallucination diff UI (expandable stated vs expected)
+- [x] Google signup
+- [x] Weekly email: Pro/Team only, EN+ID, SoM delta, top actions, unsubscribe
+- [x] Email preferences in account settings
+- [x] SSE audit progress (`GET /audits/{id}/stream`)
+- [x] Perplexity 7-day Redis cache
+- [x] API cost estimate in scorecard
+- [x] Harness retry helper
+- [x] Integration test (mock audit pipeline)
+- [x] Migration 003 (`email_digest_enabled`)
+- [x] PRD / Plan / system-design status synced
 
-## Phase 6 Checklist
+### Still pending
 
-### 6.1 Stripe — DONE
-
-- [x] Tier limits module (`apps/api/services/billing.py`)
-- [x] Checkout session (`POST /api/v1/billing/checkout`)
-- [x] Customer portal (`POST /api/v1/billing/portal`)
-- [x] Webhook handler (`POST /api/v1/webhooks/stripe`) with signature verify
-- [x] Enforce brand / query / site-audit limits per tier
-- [x] Usage counter + monthly reset Celery beat task
-- [x] Migration 002: `stripe_subscription_id`, `site_audits_used_this_period`
-- [x] Billing settings UI (`/dashboard/settings`)
-- [x] 6 billing unit tests (25 total passing)
-- [ ] Live Stripe products + price IDs in production
-- [ ] End-to-end upgrade smoke test on staging
-
-### 6.2 Production Deploy — pending
-
-- [x] CORS from `CORS_ORIGINS` env
-- [x] Rate limiting middleware (100 req/min)
-- [x] API Dockerfile updated (stripe, reportlab)
-- [x] Worker Dockerfile + `infra/railway.worker.toml`
-- [ ] Railway API + worker live
-- [ ] Vercel production domain
-- [ ] Supabase production + Upstash Redis
-
-### 6.3 Observability — pending
-
-- [ ] Sentry DSN both apps
-- [ ] Langfuse for Ollama Cloud traces
-
-### 6.4 Security — partial
-
-- [x] Stripe webhook signature verify
-- [x] Rate limiting middleware
-- [x] CORS configurable for production domain
-- [ ] RLS policies tested on Supabase
+- [ ] Production deploy (Vercel + Railway + Supabase)
+- [ ] Stripe live (skipped by choice)
+- [ ] Sentry + Langfuse
+- [ ] Supabase RLS policies
+- [ ] ChatGPT/Gemini multi-engine (PRD stretch)
+- [ ] Phase 7 beta users + case study
 
 ---
 
-## Phase 6 Exit Criteria
+## Tests
 
-- [ ] Production URL live
-- [x] Free tier limits enforced in API
-- [ ] Upgrade to Pro works end-to-end (needs Stripe keys + deploy)
-- [ ] No critical errors in 48h smoke test
-
----
-
-## Changelog
-
-### 2026-06-12 — Phase 6 billing + deploy prep (committed)
-
-- Stripe Checkout + Customer Portal + webhook handler
-- Tier enforcement: brands, queries/month, queries/audit, site audits/month
-- Billing settings page (`/dashboard/settings`) with usage meters + upgrade buttons
-- Migration 002, worker monthly reset task, rate limit + CORS config
-- Worker Dockerfile, `railway.worker.toml`, CI stripe dep
-- 25 unit tests passing; web build OK
-
-### 2026-06-12 — Phase 5 action plan + email + PDF
-
-- Ollama Cloud client + action plan generator with template fallback
-- ActionPlanList UI, ExportPdfButton, weekly digest, PDF export
+```bash
+pytest tests/           # 26 passed (25 unit + 1 integration)
+cd apps/web && npm run build
+```
 
 ---
 

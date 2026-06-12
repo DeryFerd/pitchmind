@@ -51,6 +51,15 @@
     "description": "Short description",
     "competitor1": "Competitor 1",
     "competitor2": "Competitor 2",
+    "monthlyPrice": "Monthly price (USD, for hallucination check)",
+    "features": "Key features (comma-separated)",
+    "location": "HQ location",
+    "foundedYear": "Founded year",
+    "factsHint": "Ground truth facts help catch AI hallucinations in audits.",
+    "queryTemplate": "Golden query template",
+    "templateSaas": "SaaS / software",
+    "templateLocal": "Local service",
+    "templateEcom": "E-commerce",
     "next": "Continue to dashboard",
     "saving": "Saving...",
     "error": "Something went wrong. Check your connection and try again."
@@ -71,7 +80,8 @@
     "startOnboarding": "Set up your brand",
     "viewBrand": "View brand details →",
     "upgradePrompt": "Upgrade your plan to continue",
-    "upgradeLink": "View plans & upgrade →"
+    "upgradeLink": "View plans & upgrade →",
+    "brandSettings": "Brand settings →"
   },
   "billing": {
     "title": "Billing & usage",
@@ -115,7 +125,44 @@
     "noQueryResults": "No query results yet.",
     "noSiteFindings": "No site findings.",
     "competitorChart": "Share of Model vs competitors",
-    "competitors": "Competitors"
+    "competitors": "Competitors",
+    "hallucinationPricing": "Pricing mismatch: AI said ${stated}, expected ${expected}",
+    "hallucinationLocation": "Location mismatch: AI said \"{stated}\", expected \"{expected}\"",
+    "hallucinationYear": "Founded year mismatch: AI said {stated}, expected {expected}",
+    "hallucinationFeature": "Invented feature: \"{stated}\"",
+    "hallucinationGeneric": "Flag: {type}"
+  },
+  "brandSettings": {
+    "title": "Brand settings",
+    "factsTitle": "Brand facts (ground truth)",
+    "factsDesc": "Used to detect when AI states wrong pricing, location, or features.",
+    "monthlyPrice": "Monthly price (USD)",
+    "location": "Location",
+    "foundedYear": "Founded year",
+    "features": "Features (comma-separated)",
+    "saveFacts": "Save facts",
+    "saving": "Saving…",
+    "saved": "Brand facts saved.",
+    "error": "Could not save. Try again.",
+    "competitorsTitle": "Competitors",
+    "addCompetitor": "Competitor name",
+    "add": "Add",
+    "remove": "Remove",
+    "queriesTitle": "Golden queries",
+    "queryCount": "{count} queries loaded",
+    "templateSaas": "SaaS",
+    "templateLocal": "Local",
+    "templateEcom": "E-commerce",
+    "reseedQueries": "Add template queries (appends)",
+    "customQuery": "Custom query text"
+  },
+  "emailPrefs": {
+    "title": "Email preferences",
+    "desc": "Weekly GEO digest is sent to Pro and Team plans every Monday.",
+    "weeklyDigest": "Receive weekly email digest",
+    "enabled": "Weekly digest enabled.",
+    "disabled": "Weekly digest disabled.",
+    "unsubscribed": "You have been unsubscribed from weekly emails."
   },
   "actions": {
     "title": "Action plan",

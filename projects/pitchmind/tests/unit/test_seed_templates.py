@@ -11,5 +11,5 @@ def test_render_saas_templates_bilingual():
     langs = {r["lang"] for r in results}
     assert "en" in langs
     assert "id" in langs
-    assert len(results) == 20
+    assert len(results) == 25
     assert any("PitchMind" in r["text"] for r in results)

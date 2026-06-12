@@ -1,9 +1,11 @@
+import asyncio
+import json
 import os
 import sys
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import Response
+from fastapi.responses import Response, StreamingResponse
 from sqlalchemy.orm import Session
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "packages", "db"))
@@ -180,6 +182,41 @@ def get_audit(
         action_plan=action_items,
         action_plan_source=action_source,
     )
+
+
+@router.get("/audits/{audit_id}/stream")
+async def stream_audit(
+    audit_id: uuid.UUID,
+    auth: AuthUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    audit = db.get(AuditRun, audit_id)
+    if not audit:
+        raise HTTPException(status_code=404, detail="Audit not found")
+    _get_owned_brand(db, audit.brand_id, auth)
+
+    async def event_generator():
+        for _ in range(90):
+            db.expire_all()
+            current = db.get(AuditRun, audit_id)
+            if not current:
+                break
+            count = db.query(QueryResult).filter(QueryResult.audit_run_id == audit_id).count()
+            payload = {
+                "audit_id": str(audit_id),
+                "status": current.status.value,
+                "query_results_count": count,
+            }
+            yield f"data: {json.dumps(payload)}\n\n"
+            if current.status in (
+                AuditStatus.COMPLETED,
+                AuditStatus.PARTIAL,
+                AuditStatus.FAILED,
+            ):
+                break
+            await asyncio.sleep(2)
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
 @router.get("/brands/{brand_id}/audits", response_model=list[AuditSummary])

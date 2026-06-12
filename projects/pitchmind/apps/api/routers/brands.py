@@ -12,9 +12,11 @@ from pitchmind_db.seed_templates import render_templates
 
 from apps.api.deps import get_db
 from apps.api.middleware.auth import AuthUser, get_current_user
-from apps.api.services.billing import check_brand_limit
+from apps.api.services.billing import check_brand_limit, check_competitor_limit
 from apps.api.schemas import (
     BrandCreate,
+    BrandDetailOut,
+    BrandFactsOut,
     BrandOut,
     BrandUpdate,
     CompetitorCreate,
@@ -35,6 +37,39 @@ def _get_owned_brand(db: Session, brand_id: uuid.UUID, auth: AuthUser) -> Brand:
     if not workspace or workspace.owner_id != auth.id:
         raise HTTPException(status_code=403, detail="Forbidden")
     return brand
+
+
+def _brand_detail(brand: Brand) -> BrandDetailOut:
+    facts_out = None
+    if brand.facts:
+        facts_out = BrandFactsOut(
+            pricing=brand.facts.pricing,
+            features=brand.facts.features,
+            location=brand.facts.location,
+            founded_year=brand.facts.founded_year,
+        )
+    competitors = [
+        CompetitorOut(id=c.id, name=c.name, website_url=c.website_url) for c in brand.competitors
+    ]
+    return BrandDetailOut(
+        id=brand.id,
+        workspace_id=brand.workspace_id,
+        name=brand.name,
+        website_url=brand.website_url,
+        description=brand.description,
+        facts=facts_out,
+        competitors=competitors,
+    )
+
+
+@router.get("/brands/{brand_id}", response_model=BrandDetailOut)
+def get_brand(
+    brand_id: uuid.UUID,
+    auth: AuthUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    brand = _get_owned_brand(db, brand_id, auth)
+    return _brand_detail(brand)
 
 
 @router.post("/brands", response_model=BrandOut, status_code=201)
@@ -108,6 +143,7 @@ def add_competitor(
     db: Session = Depends(get_db),
 ):
     _get_owned_brand(db, brand_id, auth)
+    check_competitor_limit(db, auth.id, brand_id)
     competitor = Competitor(
         id=uuid.uuid4(),
         brand_id=brand_id,
@@ -118,6 +154,21 @@ def add_competitor(
     db.commit()
     db.refresh(competitor)
     return competitor
+
+
+@router.delete("/brands/{brand_id}/competitors/{competitor_id}", status_code=204)
+def delete_competitor(
+    brand_id: uuid.UUID,
+    competitor_id: uuid.UUID,
+    auth: AuthUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    _get_owned_brand(db, brand_id, auth)
+    competitor = db.get(Competitor, competitor_id)
+    if not competitor or competitor.brand_id != brand_id:
+        raise HTTPException(status_code=404, detail="Competitor not found")
+    db.delete(competitor)
+    db.commit()
 
 
 @router.get("/brands/{brand_id}/queries", response_model=list[GoldenQueryOut])
@@ -150,6 +201,21 @@ def add_query(
     db.commit()
     db.refresh(query)
     return query
+
+
+@router.delete("/brands/{brand_id}/queries/{query_id}", status_code=204)
+def delete_query(
+    brand_id: uuid.UUID,
+    query_id: uuid.UUID,
+    auth: AuthUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    _get_owned_brand(db, brand_id, auth)
+    query = db.get(GoldenQuery, query_id)
+    if not query or query.brand_id != brand_id:
+        raise HTTPException(status_code=404, detail="Query not found")
+    db.delete(query)
+    db.commit()
 
 
 @router.post("/brands/{brand_id}/queries/seed", response_model=list[GoldenQueryOut], status_code=201)

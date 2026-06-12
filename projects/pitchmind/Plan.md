@@ -1,7 +1,7 @@
 # PitchMind — End-to-End Implementation Plan
 
 > Version: 1.0  
-> Last updated: 2026-06-11  
+> Last updated: 2026-06-12  
 > Duration: 8-10 weeks  
 > Related: [PRD.md](./PRD.md) | [system-design.md](./system-design.md) | [progress.md](./progress.md)
 
@@ -32,9 +32,9 @@ PitchMind is a production GEO audit SaaS. This plan covers full implementation f
 
 ---
 
-## Phase 0: Documentation (Current)
+## Phase 0: Documentation
 
-**Status:** In progress  
+**Status:** DONE  
 **Duration:** 1-2 days
 
 ### Tasks
@@ -423,9 +423,9 @@ Phases 2 and 3 can partially overlap after Phase 1 completes.
 
 ## Next Immediate Actions
 
-1. Review PRD + system-design (self sign-off)
-2. Initialize monorepo scaffold (Phase 1.1)
-3. Create Supabase project + first migration
-4. Build landing page + auth flow
+1. Deploy to Vercel + Railway (no live Stripe required)
+2. Supabase production project + run migrations 001–003
+3. Phase 7 beta: recruit 10 users, case study
+4. Optional: ChatGPT/Gemini spot-check UI (post-MVP)
 
 See [progress.md](./progress.md) for live status.

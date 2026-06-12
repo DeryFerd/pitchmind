@@ -13,6 +13,9 @@ QUERY_TEMPLATES: dict[str, dict[str, list[str]]] = {
             "Does {brand} integrate with Slack?",
             "Best free {category} software",
             "{brand} reviews and ratings",
+            "Who should use {brand} for {category}?",
+            "What makes {brand} different from {competitor}?",
+            "Is {brand} good for small businesses?",
         ],
         "id": [
             "Software {category} terbaik untuk tim remote",
@@ -25,6 +28,8 @@ QUERY_TEMPLATES: dict[str, dict[str, list[str]]] = {
             "Apakah {brand} terintegrasi dengan Slack?",
             "Software {category} gratis terbaik",
             "Review dan rating {brand}",
+            "Siapa yang cocok pakai {brand} untuk {category}?",
+            "Apa yang membedakan {brand} dari {competitor}?",
         ],
     },
     "local": {

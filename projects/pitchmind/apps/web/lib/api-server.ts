@@ -53,3 +53,15 @@ export async function fetchLatestScorecard(brandId: string): Promise<ScorecardRe
 export async function fetchSubscriptionStatus(): Promise<import("@/lib/api").SubscriptionStatus | null> {
   return serverApiFetch<import("@/lib/api").SubscriptionStatus>("/api/v1/billing/subscription");
 }
+
+export async function fetchBrandDetail(brandId: string): Promise<import("@/lib/api").BrandDetail | null> {
+  return serverApiFetch<import("@/lib/api").BrandDetail>(`/api/v1/brands/${brandId}`);
+}
+
+export async function fetchBrandQueries(brandId: string): Promise<import("@/lib/api").GoldenQuery[]> {
+  return (await serverApiFetch<import("@/lib/api").GoldenQuery[]>(`/api/v1/brands/${brandId}/queries`)) ?? [];
+}
+
+export async function fetchEmailPreferences(): Promise<{ email_digest_enabled: boolean } | null> {
+  return serverApiFetch<{ email_digest_enabled: boolean }>("/api/v1/account/email-preferences");
+}

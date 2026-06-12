@@ -1,6 +1,6 @@
 # PitchMind — Project Memory
 
-> Last updated: 2026-06-12 (Phase 6 code committed)
+> Last updated: 2026-06-12 (MVP gap fill committed)
 
 ---
 
@@ -9,7 +9,7 @@
 - **Name:** PitchMind — GEO audit SaaS
 - **Repo:** https://github.com/DeryFerd/pitchmind
 - **Local path:** `projects/pitchmind`
-- **Latest commit:** Phase 6 — Stripe billing + tier enforcement + deploy prep
+- **Status:** MVP product ~95% — deploy + beta next
 
 ---
 
@@ -18,92 +18,65 @@
 | Layer | Choice |
 |-------|--------|
 | Frontend | Next.js 15, next-intl, Tailwind, Supabase Auth |
-| API | FastAPI, JWT, Stripe webhooks |
+| API | FastAPI, JWT, tier limits (Stripe code present, live skipped) |
 | Worker | Celery + Redis + Beat |
-| Visibility | Perplexity API (mock if no key) |
-| Action plan | Ollama Cloud — `https://ollama.com`, `gpt-oss:20b-cloud` |
-| Email | Resend (optional) |
-| Billing | Stripe Checkout + Customer Portal |
+| Visibility | Perplexity API (mock if no key, 7-day Redis cache) |
+| Action plan | Ollama Cloud — `gpt-oss:20b-cloud` |
+| Email | Resend — Pro/Team weekly digest only |
 | PDF | reportlab |
 
 ---
 
-## Completed Phases
-
-| Phase | Scope |
-|-------|-------|
-| 1 | Monorepo, API, auth UI, onboarding |
-| 2 | Geo engine — Perplexity, scorer, audit API |
-| 3 | Site auditor — 7 checks, readiness score |
-| 4 | Dashboard UI — brand/audit pages, polling, i18n |
-| 5 | Action plan — Ollama Cloud, weekly email, PDF export |
-| 6 (code) | Stripe billing, tier limits, settings UI, deploy configs |
-
----
-
-## Key paths (Phase 6)
+## Key paths (latest)
 
 ```
-apps/api/services/billing.py
-apps/api/services/stripe_service.py
-apps/api/routers/billing.py
-apps/api/routers/webhooks.py
-apps/api/middleware/rate_limit.py
-apps/web/components/BillingPanel.tsx
-apps/web/app/[locale]/dashboard/settings/page.tsx
-apps/worker/tasks/billing.py
-packages/db/alembic/versions/002_billing_fields.py
-infra/railway.worker.toml
+apps/web/app/[locale]/dashboard/brands/[id]/settings/   # brand facts, competitors, queries
+apps/web/components/BrandSettingsPanel.tsx
+apps/web/components/QueryResultsTable.tsx               # hallucination diff expand
+apps/api/routers/account.py                             # email preferences
+apps/api/routers/audits.py                              # SSE stream
+packages/geo-engine/pitchmind_geo/cache.py              # Perplexity cache
+packages/db/alembic/versions/003_user_email_prefs.py
+tests/integration/test_audit_pipeline.py
 ```
 
 ---
 
-## Tier limits (PRD)
+## Tier limits
 
-| Tier | Brands | Queries/mo | Queries/audit | Site audits/mo |
-|------|--------|------------|---------------|----------------|
-| Free | 1 | 10 | 5 | 1 |
-| Pro | 5 | 200 | 50 | 4 |
-| Team | 20 | 1000 | 100 | 20 |
+| Tier | Brands | Competitors | Queries/mo | Queries/audit |
+|------|--------|-------------|------------|---------------|
+| Free | 1 | 2 | 10 | 5 |
+| Pro | 5 | 5 | 200 | 50 |
+| Team | 20 | 5 | 1000 | 100 |
+
+Weekly email: **Pro + Team only** (`user_receives_weekly_email`).
+
+Golden queries: **25** per template seed (13 EN + 12 ID).
 
 ---
 
-## Env vars (never commit)
+## Decisions
 
-```
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
-STRIPE_PRICE_ID_PRO=
-STRIPE_PRICE_ID_TEAM=
-WEB_URL=http://localhost:3000
-CORS_ORIGINS=http://localhost:3000
-OLLAMA_API_KEY=
-RESEND_API_KEY=
-SUPABASE_JWT_SECRET=
-```
+- **Stripe live skipped** — billing code exists; focus product + free deploy first
+- **Brand facts required for good hallucination checks** — collected in onboarding + brand settings
+- **Perplexity only** for visibility MVP; ChatGPT/Gemini deferred to v1.1
 
 ---
 
 ## Dev commands
 
 ```bash
+make migrate          # runs through 003
 make api && make worker && make beat && make web
-make migrate
-pytest tests/unit/          # 25 tests
-cd apps/web && npm run build
-```
-
-Local Stripe webhook:
-
-```bash
-stripe listen --forward-to localhost:8000/api/v1/webhooks/stripe
+pytest tests/         # 26 tests
 ```
 
 ---
 
 ## Next session
 
-1. Create Stripe products (Pro $19, Team $49) → price IDs in `.env`
-2. Deploy Railway (API + worker) + Vercel (web)
-3. Smoke test upgrade flow end-to-end
-4. Phase 7 — beta users + Product Hunt launch
+1. Deploy Vercel (web) + Railway (API/worker) — free tiers OK
+2. Supabase production + env secrets
+3. Run full E2E audit with real Perplexity + Ollama keys
+4. Phase 7: 10 beta users, case study, Product Hunt

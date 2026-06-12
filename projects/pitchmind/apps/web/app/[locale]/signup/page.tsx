@@ -20,20 +20,51 @@ export default function SignupPage() {
     else window.location.href = `/${locale}/onboarding`;
   }
 
+  async function handleGoogle() {
+    const supabase = createClient();
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/auth/callback?next=/${locale}/onboarding` },
+    });
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-md border border-slate-800 rounded-xl p-8 bg-slate-900/50">
         <h1 className="text-2xl font-bold mb-6">{t("signupTitle")}</h1>
         <form onSubmit={handleSignup} className="space-y-4">
-          <input type="email" placeholder={t("email")} value={email} onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2" required />
-          <input type="password" placeholder={t("password")} value={password} onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2" required minLength={6} />
+          <input
+            type="email"
+            placeholder={t("email")}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2"
+            required
+          />
+          <input
+            type="password"
+            placeholder={t("password")}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2"
+            required
+            minLength={6}
+          />
           {error && <p className="text-red-400 text-sm">{error}</p>}
-          <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 py-2 rounded-lg">{t("signupBtn")}</button>
+          <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 py-2 rounded-lg">
+            {t("signupBtn")}
+          </button>
         </form>
+        <button
+          onClick={handleGoogle}
+          className="w-full mt-3 border border-slate-700 py-2 rounded-lg hover:bg-slate-800"
+        >
+          {t("googleBtn")}
+        </button>
         <p className="mt-4 text-sm text-slate-400 text-center">
-          <Link href="../login" className="text-indigo-400">Log in</Link>
+          <Link href="../login" className="text-indigo-400">
+            Log in
+          </Link>
         </p>
       </div>
     </div>

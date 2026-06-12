@@ -9,7 +9,10 @@ from dataclasses import dataclass
 
 import httpx
 
+from pitchmind_geo.cache import get_cached_response, set_cached_response
+
 PERPLEXITY_API_URL = "https://api.perplexity.ai/chat/completions"
+ESTIMATED_COST_PER_QUERY_USD = 0.02
 DEFAULT_MODEL = "sonar"
 
 
@@ -36,10 +39,27 @@ class PerplexityClient:
         if self.mock:
             return self._mock_response(text)
 
+        cached = get_cached_response(text)
+        if cached:
+            return PerplexityResponse(
+                text=cached["text"],
+                citations=cached.get("citations", []),
+                model=cached.get("model", DEFAULT_MODEL),
+            )
+
         last_error: Exception | None = None
         for attempt in range(retries):
             try:
-                return await self._call_api(text)
+                response = await self._call_api(text)
+                set_cached_response(
+                    text,
+                    {
+                        "text": response.text,
+                        "citations": response.citations,
+                        "model": response.model,
+                    },
+                )
+                return response
             except (httpx.HTTPError, httpx.TimeoutException) as exc:
                 last_error = exc
                 if attempt < retries - 1:

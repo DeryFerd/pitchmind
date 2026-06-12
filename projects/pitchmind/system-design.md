@@ -2,7 +2,7 @@
 
 > Version: 1.0  
 > Last updated: 2026-06-11  
-> Status: Pre-development  
+> Status: Implemented (MVP) — see [progress.md](./progress.md)  
 > Related: [PRD.md](./PRD.md) | [Plan.md](./Plan.md)
 
 ---

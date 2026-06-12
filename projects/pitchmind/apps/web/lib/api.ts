@@ -113,12 +113,40 @@ function normalizeUrl(url: string): string {
   return `https://${trimmed}`;
 }
 
+export type BrandDetail = {
+  id: string;
+  workspace_id: string;
+  name: string;
+  website_url: string;
+  description: string | null;
+  facts: {
+    pricing: { monthly?: number } | null;
+    features: string[] | null;
+    location: string | null;
+    founded_year: number | null;
+  } | null;
+  competitors: Array<{ id: string; name: string; website_url: string | null }>;
+};
+
+export type GoldenQuery = {
+  id: string;
+  text: string;
+  lang: string;
+  category: string;
+  is_custom: boolean;
+};
+
 export async function completeOnboarding(data: {
   brandName: string;
   website: string;
   description: string;
   competitor1: string;
   competitor2: string;
+  monthlyPrice?: string;
+  features?: string;
+  location?: string;
+  foundedYear?: string;
+  queryTemplate?: "saas" | "local" | "ecom";
 }) {
   const workspaces = await apiFetch<Workspace[]>("/api/v1/workspaces");
   const workspace =
@@ -128,6 +156,10 @@ export async function completeOnboarding(data: {
       body: JSON.stringify({ name: `${data.brandName} Workspace` }),
     }));
 
+  const featureList = data.features
+    ? data.features.split(",").map((f) => f.trim()).filter(Boolean)
+    : null;
+
   const brand = await apiFetch<Brand>("/api/v1/brands", {
     method: "POST",
     body: JSON.stringify({
@@ -135,6 +167,12 @@ export async function completeOnboarding(data: {
       name: data.brandName,
       website_url: normalizeUrl(data.website),
       description: data.description || null,
+      facts: {
+        pricing: data.monthlyPrice ? { monthly: Number(data.monthlyPrice) } : null,
+        features: featureList,
+        location: data.location || null,
+        founded_year: data.foundedYear ? Number(data.foundedYear) : null,
+      },
     }),
   });
 
@@ -148,7 +186,10 @@ export async function completeOnboarding(data: {
 
   await apiFetch(`/api/v1/brands/${brand.id}/queries/seed`, {
     method: "POST",
-    body: JSON.stringify({ template: "saas", category: "software" }),
+    body: JSON.stringify({
+      template: data.queryTemplate ?? "saas",
+      category: "software",
+    }),
   });
 
   return brand;
@@ -164,6 +205,13 @@ export async function startCheckout(tier: "pro" | "team", locale: string): Promi
     body: JSON.stringify({ tier, locale }),
   });
   return res.checkout_url;
+}
+
+export async function updateEmailPreferences(enabled: boolean): Promise<void> {
+  await apiFetch("/api/v1/account/email-preferences", {
+    method: "PATCH",
+    body: JSON.stringify({ email_digest_enabled: enabled }),
+  });
 }
 
 export async function openBillingPortal(): Promise<string> {

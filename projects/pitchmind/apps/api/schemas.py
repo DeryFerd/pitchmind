@@ -37,6 +37,13 @@ class BrandUpdate(BaseModel):
     facts: BrandFactsIn | None = None
 
 
+class BrandFactsOut(BaseModel):
+    pricing: dict | None = None
+    features: list | None = None
+    location: str | None = None
+    founded_year: int | None = None
+
+
 class BrandOut(BaseModel):
     id: UUID
     workspace_id: UUID
@@ -45,6 +52,11 @@ class BrandOut(BaseModel):
     description: str | None
 
     model_config = {"from_attributes": True}
+
+
+class BrandDetailOut(BrandOut):
+    facts: BrandFactsOut | None = None
+    competitors: list["CompetitorOut"] = []
 
 
 class CompetitorCreate(BaseModel):
@@ -155,3 +167,7 @@ class CheckoutResponse(BaseModel):
 
 class PortalResponse(BaseModel):
     portal_url: str
+
+
+class EmailPrefsUpdate(BaseModel):
+    email_digest_enabled: bool

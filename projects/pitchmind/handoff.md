@@ -1,95 +1,91 @@
 # PitchMind — Handoff
 
-> **Stop point:** Phase 6 code complete — Stripe billing + tier enforcement committed  
+> **Stop point:** MVP product complete — all PRD/Plan P0–P1 gaps filled (except deploy + Stripe live)  
 > **Date:** 2026-06-12  
-> **Next:** Production deploy + Stripe live keys + Phase 7 beta
+> **Next:** Production deploy + beta program (Phase 7)
 
 ---
 
-## What's in the repo (Phase 6)
+## What's ready
 
-| Feature | Location |
-|---------|----------|
-| Tier limits + usage | `apps/api/services/billing.py` |
-| Stripe Checkout / Portal | `apps/api/services/stripe_service.py` |
-| Billing API | `GET/POST /api/v1/billing/*` |
-| Stripe webhook | `POST /api/v1/webhooks/stripe` |
-| Brand + audit enforcement | `routers/brands.py`, `routers/audits.py` |
-| Monthly reset task | `apps/worker/tasks/billing.py` + beat (1st of month) |
-| Billing UI | `/dashboard/settings` + `BillingPanel.tsx` |
-| Migration 002 | `002_billing_fields.py` |
-| Deploy prep | CORS env, rate limit, API + worker Dockerfiles |
-
----
-
-## Full audit pipeline (unchanged)
-
-```
-Run Audit
-  → Tier limit check (brands, queries/mo, site audits/mo)
-  → Perplexity visibility batch
-  → Site auditor (7 checks)
-  → Ollama Cloud action plan (or template fallback)
-  → Scorecard + ActionPlan in DB
-  → UI: audit detail + PDF + billing settings
-```
+| Area | Status |
+|------|--------|
+| Full audit pipeline | visibility → site → action plan → PDF |
+| Bilingual UI (EN/ID) | landing, auth, onboarding, dashboard, audit |
+| Brand facts + hallucination diff | onboarding + brand settings |
+| Golden queries | 25/template, picker saas/local/ecom |
+| Brand settings | facts, competitors, custom queries |
+| Tier limits | brands, competitors, queries, site audits |
+| Billing code | Stripe checkout/portal/webhook (not live) |
+| Weekly email | Pro/Team, EN+ID, delta + actions, unsubscribe |
+| SSE progress | `GET /api/v1/audits/{id}/stream` |
+| Cache + cost | Perplexity 7-day cache, `estimated_cost_usd` in scorecard |
 
 ---
 
-## Before first deploy
+## New routes (this session)
 
-1. **Migration:** `make migrate` (runs 002)
-2. **Stripe Dashboard:** create Pro ($19) + Team ($49) products → copy price IDs
-3. **`.env`** (never commit):
+| Route | Purpose |
+|-------|---------|
+| `GET /api/v1/brands/{id}` | Brand detail + facts + competitors |
+| `DELETE .../competitors/{id}` | Remove competitor |
+| `DELETE .../queries/{id}` | Remove custom query |
+| `GET/PATCH /api/v1/account/email-preferences` | Weekly digest opt-in/out |
+| `GET /api/v1/audits/{id}/stream` | SSE audit progress |
+| `/dashboard/brands/[id]/settings` | Brand management UI |
+
+---
+
+## Migrations
 
 ```bash
-STRIPE_SECRET_KEY=sk_test_xxx
-STRIPE_WEBHOOK_SECRET=whsec_xxx
-STRIPE_PRICE_ID_PRO=price_xxx
-STRIPE_PRICE_ID_TEAM=price_xxx
-WEB_URL=https://your-vercel-domain.vercel.app
-CORS_ORIGINS=https://your-vercel-domain.vercel.app
-OLLAMA_API_KEY=your-key
-```
-
-4. **Local webhook test:**
-
-```bash
-stripe listen --forward-to localhost:8000/api/v1/webhooks/stripe
+make migrate   # 001 → 002 → 003 (email_digest_enabled)
 ```
 
 ---
 
-## Deploy checklist
-
-| Service | Config | Start command |
-|---------|--------|---------------|
-| Railway API | `apps/api/Dockerfile`, `infra/railway.toml` | uvicorn |
-| Railway Worker | `apps/worker/Dockerfile`, `infra/railway.worker.toml` | celery worker |
-| Railway Beat | same worker image | `celery beat` (separate service) |
-| Vercel Web | `apps/web/` | auto |
-| Stripe webhook | production API URL | `/api/v1/webhooks/stripe` |
-| Supabase | production JWT secret | — |
-| Upstash | Redis URL for Celery | — |
-
----
-
-## Tests (verified before commit)
+## Run locally
 
 ```bash
-pytest tests/unit/        # 25 passed
+# .env: DATABASE_URL, REDIS_URL, SUPABASE_JWT_SECRET, optional PERPLEXITY + OLLAMA
+make dev-up && make migrate
+make api && make worker && make web
+pytest tests/        # 26 passed
 cd apps/web && npm run build
 ```
 
+Perplexity mock mode works without API key. Ollama action plan falls back to template without key.
+
 ---
 
-## Next: finish Phase 6 deploy, then Phase 7
+## Deploy (no Stripe needed)
 
-- [ ] Railway API + worker + beat live
-- [ ] Vercel production domain
-- [ ] Stripe webhook registered on production URL
-- [ ] One successful Pro upgrade smoke test
-- [ ] Recruit 10 beta users (5 EN + 5 ID)
-- [ ] Product Hunt launch + case study
+| Service | Notes |
+|---------|-------|
+| Vercel | `apps/web`, set `NEXT_PUBLIC_*` |
+| Railway API | `apps/api/Dockerfile` |
+| Railway Worker + Beat | `apps/worker/Dockerfile` |
+| Supabase | Postgres + Auth JWT secret |
+| Upstash | Redis for Celery |
 
-See [Plan.md](./Plan.md) Phase 6–7.
+Skip `STRIPE_*` env vars until ready to accept payments.
+
+---
+
+## Intentionally deferred
+
+- Stripe live checkout (user choice)
+- ChatGPT / Gemini engines
+- Sentry, Langfuse, Supabase RLS
+- Historical trend charts (P2)
+
+---
+
+## Phase 7 checklist
+
+- [ ] Public URL live
+- [ ] 10 beta users (5 EN + 5 ID)
+- [ ] Case study with before/after SoM
+- [ ] Product Hunt draft
+
+See [Plan.md](./Plan.md) Phase 7.
