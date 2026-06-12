@@ -1,8 +1,8 @@
 # PitchMind — Progress Tracker
 
 > Last updated: 2026-06-12  
-> Current phase: **Phase 1 — Foundation (near complete)**  
-> Overall progress: **~75%**
+> Current phase: **Phase 2 — Geo Engine (in progress)**  
+> Overall progress: **~60%**
 
 ---
 
@@ -36,8 +36,8 @@
 | Phase | Name | Status | Started | Completed | Notes |
 |-------|------|--------|---------|-----------|-------|
 | 0 | Documentation | **DONE** | 2026-06-11 | 2026-06-11 | |
-| 1 | Foundation | **in_progress** | 2026-06-11 | — | ~90% of Phase 1 tasks |
-| 2 | Geo Engine | not_started | — | — | |
+| 1 | Foundation | **in_progress** | 2026-06-11 | — | code done; Docker/Supabase deferred |
+| 2 | Geo Engine | **in_progress** | 2026-06-12 | — | visibility audit ~70% |
 | 3 | Site Auditor | not_started | — | — | |
 | 4 | Dashboard UI | not_started | — | — | shell + brand list |
 | 5 | Action Plan + Email | not_started | — | — | |
@@ -113,7 +113,61 @@
 
 ---
 
+## Phase 2 Checklist
+
+### 2.1 Perplexity Integration
+
+- [x] DONE — `clients/perplexity.py` with retry + mock mode
+- [ ] NOT STARTED — Rate limiter + cost tracker per workspace
+
+### 2.2 Citation & Mention Parser
+
+- [x] DONE — Brand/competitor mention detector
+- [x] DONE — Rule-based sentiment classifier
+
+### 2.3 Hallucination Checker
+
+- [x] DONE — Pricing mismatch detector
+- [x] DONE — Feature/location/year flags
+- [x] DONE — Unit tests
+
+### 2.4 Scorer
+
+- [x] DONE — Share of Model calculator
+- [x] DONE — Citation accuracy + competitor gap
+- [x] DONE — Scorecard JSON schema
+
+### 2.5 Worker
+
+- [x] DONE — `run_visibility_audit` Celery task
+- [x] DONE — Persist QueryResults + scorecard
+- [x] DONE — Partial completion handling
+- [ ] NOT STARTED — Redis SSE progress updates
+
+### 2.6 API
+
+- [x] DONE — `POST /api/v1/brands/{id}/audits`
+- [x] DONE — `GET /api/v1/audits/{id}`
+- [x] DONE — `GET /api/v1/brands/{id}/audits`
+- [x] DONE — `GET /api/v1/brands/{id}/scorecard`
+- [x] DONE — Free tier query limit check
+
+### 2.7 Web
+
+- [x] DONE — Run audit button on dashboard
+
+---
+
 ## Changelog
+
+### 2026-06-12 — Phase 2 geo engine
+
+- Geo-engine package: Perplexity client (mock + real), parser, hallucination, scorer, runner
+- Celery `run_visibility_audit` full implementation
+- Audit API endpoints (POST/GET audits, scorecard)
+- Dashboard RunAuditButton component
+- 11 unit tests passing
+- Mock Perplexity mode for dev without API key
 
 ### 2026-06-12 — Phase 1 API integration
 

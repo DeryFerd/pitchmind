@@ -1,6 +1,6 @@
 # PitchMind — Handoff
 
-> **Stop point:** Phase 1 Foundation ~90% complete (API-web integration done, live services pending)  
+> **Stop point:** Phase 2 Geo Engine ~70% complete (visibility audit works; site auditor + action plan pending)  
 > **Date:** 2026-06-12  
 > **Repo:** https://github.com/DeryFerd/pitchmind
 
@@ -8,140 +8,98 @@
 
 ## Where We Stopped
 
-Phase 1 code integration is complete. Onboarding persists to PostgreSQL via API, dashboard loads brands, and protected routes redirect unauthenticated users. **Blocked on user actions:** Docker Desktop (for local DB) and Supabase keys (for live auth).
+Phase 2 visibility engine is implemented. Perplexity client runs in **mock mode** without API key (good for dev without Docker/Supabase). Full E2E audit flow needs Docker (Postgres + Redis) + Supabase — can be wired later.
 
 ---
 
-## Immediate Next Steps (in order)
+## Deferred (OK to do later)
 
-### Step 1: Start Docker + run migrations (15 min)
+| Item | Why deferred |
+|------|--------------|
+| Docker Desktop | Local Postgres + Redis for migrations and Celery |
+| Supabase keys | Live auth + JWT for API calls |
+| `PERPLEXITY_API_KEY` | Real AI responses (mock works for dev) |
+| Railway / Vercel deploy | After local E2E verified |
+
+---
+
+## Immediate Next Steps (when ready)
+
+### Step 1: Local infra (15 min)
 
 ```bash
-# Start Docker Desktop first, then:
+# Start Docker Desktop, then:
 cd projects/pitchmind
-cp .env.example .env          # if not done
 make dev-up
 make migrate
+make api
+make worker   # separate terminal
+make web
 ```
 
-Verify: tables exist in postgres on port 5433.
+### Step 2: Supabase (30 min)
 
-### Step 2: Supabase setup (30 min)
+Copy keys to `.env` and `apps/web/.env.local` — see `.env.example`.
 
-1. Create project at https://supabase.com
-2. Enable Email + Google auth providers
-3. Copy to `.env` (pitchmind root):
-   - `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `SUPABASE_JWT_SECRET`
-4. Copy to `apps/web/.env.local` (see `.env.local.example`):
-   - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `NEXT_PUBLIC_API_URL=http://localhost:8000`
-5. JWT secret: Project Settings → API → JWT Secret
+### Step 3: Test audit E2E
 
-### Step 3: End-to-end local test (30 min)
+1. Sign up → onboard → dashboard
+2. Click "Run audit"
+3. Worker processes queries (mock Perplexity if no API key)
+4. `GET /api/v1/audits/{id}` returns scorecard
 
-```bash
-make api    # :8000
-make web    # :3000
-```
+### Step 4: Phase 3 — Site Auditor
 
-Flow to verify:
-1. Sign up at `/en/signup`
-2. Complete onboarding at `/en/onboarding`
-3. Dashboard at `/en/dashboard` shows brand name + website
-4. Data in PostgreSQL (not localStorage)
-
-```bash
-curl http://localhost:8000/health
-# With valid JWT:
-curl -H "Authorization: Bearer <token>" http://localhost:8000/api/v1/workspaces
-```
-
-### Step 4: Complete Phase 1 exit criteria
-
-- [ ] User can sign up → onboard → see dashboard with brand name
-- [ ] Data persisted in PostgreSQL (not localStorage) — **code ready, needs Docker + Supabase**
-- [ ] Push to GitHub
-- [ ] Deploy API to Railway, web to Vercel (optional but Phase 1 exit criteria)
+Start in `packages/site-auditor/`:
+- `llms_txt.py`, `robots.py`, `schema.py`
+- Wire into audit worker after visibility batch
 
 ---
 
-## What Was Done (2026-06-12)
+## Phase 2 Delivered
 
-| Task | File(s) |
-|------|---------|
-| API helper (client) | `apps/web/lib/api.ts` |
-| API helper (server) | `apps/web/lib/api-server.ts` |
-| Onboarding → API | `apps/web/app/[locale]/onboarding/page.tsx` |
-| Dashboard brand list | `apps/web/app/[locale]/dashboard/page.tsx` |
-| Auth middleware | `apps/web/middleware.ts` |
-| List brands endpoint | `apps/api/routers/workspaces.py` → `GET /workspaces/{id}/brands` |
-| Locale redirects | login, signup, onboarding pages |
-| i18n strings | `messages/en.json`, `messages/id.json` |
+| Component | Path |
+|-----------|------|
+| Perplexity client (mock + real) | `packages/geo-engine/pitchmind_geo/clients/perplexity.py` |
+| Mention/citation parser | `packages/geo-engine/pitchmind_geo/parser.py` |
+| Hallucination checker | `packages/geo-engine/pitchmind_geo/hallucination.py` |
+| Scorecard scorer | `packages/geo-engine/pitchmind_geo/scorer.py` |
+| Batch runner | `packages/geo-engine/pitchmind_geo/runner.py` |
+| Celery audit task | `apps/worker/tasks/audit.py` |
+| Audit API | `apps/api/routers/audits.py` |
+| Run audit UI | `apps/web/components/RunAuditButton.tsx` |
+| Unit tests | `tests/unit/test_geo_*.py` |
 
----
+### API Endpoints (new)
 
-## Phase 2 Preview (after Phase 1 done)
-
-Start in `packages/geo-engine/`:
-
-1. `clients/perplexity.py` — API client
-2. `clients/ollama_cloud.py` — use pattern from system-design.md:
-   ```python
-   Client(host="https://ollama.com", headers={"Authorization": f"Bearer {key}"})
-   model="gpt-oss:20b-cloud"
-   ```
-3. Citation parser + scorer
-4. Implement `apps/worker/tasks/audit.py` fully
-5. Add `POST /api/v1/brands/{id}/audits` endpoint
+- `POST /api/v1/brands/{id}/audits` — enqueue visibility audit
+- `GET /api/v1/audits/{id}` — status + scorecard
+- `GET /api/v1/brands/{id}/audits` — audit history
+- `GET /api/v1/brands/{id}/scorecard` — latest scorecard
 
 ---
 
-## Key Files to Read First
+## Mock Mode
+
+When `PERPLEXITY_API_KEY` is empty, geo-engine returns synthetic responses mentioning PitchMind + competitors. Lets you develop and test worker/scoring without paid API.
+
+---
+
+## Key Files
 
 | File | Why |
 |------|-----|
 | [Plan.md](./Plan.md) | Full phased roadmap |
-| [system-design.md](./system-design.md) | Architecture, API spec, data model |
-| [memory.md](./memory.md) | Stack decisions, conventions |
-| [progress.md](./progress.md) | What's DONE vs not |
-| `apps/web/lib/api.ts` | Client API helper |
-| `apps/api/routers/workspaces.py` | Workspace + brand list |
-| `apps/web/middleware.ts` | Auth protection |
-
----
-
-## Environment Checklist
-
-```bash
-# Required for Phase 1 completion
-DATABASE_URL=postgresql://pitchmind:pitchmind_dev@localhost:5433/pitchmind
-SUPABASE_URL=
-SUPABASE_SERVICE_KEY=
-SUPABASE_JWT_SECRET=
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-NEXT_PUBLIC_API_URL=http://localhost:8000
-
-# Required for Phase 2
-PERPLEXITY_API_KEY=
-OLLAMA_API_KEY=
-OLLAMA_CLOUD_HOST=https://ollama.com
-OLLAMA_ACTION_PLAN_MODEL=gpt-oss:20b-cloud
-```
+| [memory.md](./memory.md) | Stack decisions |
+| [progress.md](./progress.md) | Live status |
+| `packages/geo-engine/pitchmind_geo/runner.py` | Audit batch logic |
+| `apps/worker/tasks/audit.py` | Celery task |
+| `apps/api/routers/audits.py` | Audit endpoints |
 
 ---
 
 ## Do NOT
 
-- Add local Ollama daemon / GPU sidecar on Railway
-- Skip bilingual support — all user-facing strings via `messages/en.json` + `id.json`
-- Build audit UI before Phase 2 geo-engine works
-
----
-
-## Questions for User (if blocked)
-
-1. Supabase project URL + keys?
-2. Use Supabase hosted Postgres or local docker for dev?
-3. Railway vs Fly.io for API deploy preference?
-4. Start Docker Desktop so migrations can run?
+- Add local Ollama daemon — use Ollama Cloud only
+- Skip bilingual support
+- Require Docker/Supabase to run unit tests (`pytest tests/unit/` works standalone)

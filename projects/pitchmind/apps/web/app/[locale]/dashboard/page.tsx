@@ -1,3 +1,4 @@
+import { RunAuditButton } from "@/components/RunAuditButton";
 import { fetchUserBrands } from "@/lib/api-server";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
@@ -42,12 +43,16 @@ export default async function DashboardPage({ params }: Props) {
             ))}
           </div>
         )}
-        <button
-          className="bg-indigo-600 hover:bg-indigo-500 px-6 py-2 rounded-lg opacity-50 cursor-not-allowed"
-          disabled
-        >
-          {t("runAudit")} (Phase 2)
-        </button>
+        {brands.length > 0 ? (
+          <RunAuditButton brandId={brands[0].id} />
+        ) : (
+          <button
+            className="bg-indigo-600 hover:bg-indigo-500 px-6 py-2 rounded-lg opacity-50 cursor-not-allowed"
+            disabled
+          >
+            {t("runAudit")}
+          </button>
+        )}
       </main>
     </div>
   );

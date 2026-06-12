@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "packages", "db"))
 
 from apps.api.config import settings
-from apps.api.routers import brands, workspaces
+from apps.api.routers import audits, brands, workspaces
 
 app = FastAPI(
     title="PitchMind API",
@@ -25,6 +25,7 @@ app.add_middleware(
 
 app.include_router(workspaces.router)
 app.include_router(brands.router)
+app.include_router(audits.router)
 
 
 @app.get("/health")

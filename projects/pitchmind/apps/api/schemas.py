@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel, Field, HttpUrl
@@ -78,3 +79,27 @@ class GoldenQueryCreate(BaseModel):
     text: str = Field(min_length=5, max_length=500)
     lang: str = Field(pattern="^(en|id)$")
     category: str = "custom"
+
+
+class AuditCreate(BaseModel):
+    engines: list[str] = ["perplexity"]
+    languages: list[str] = Field(default=["en", "id"])
+    include_site_audit: bool = False
+    include_action_plan: bool = False
+
+
+class AuditOut(BaseModel):
+    audit_id: UUID
+    brand_id: UUID
+    status: str
+    estimated_duration_seconds: int
+
+
+class AuditSummary(BaseModel):
+    audit_id: UUID
+    brand_id: UUID
+    status: str
+    scorecard: dict | None = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    query_results_count: int = 0

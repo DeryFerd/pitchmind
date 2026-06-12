@@ -1,7 +1,7 @@
 # PitchMind — Project Memory
 
 > Session memory for agents/devs continuing this project.  
-> Last updated: 2026-06-12
+> Last updated: 2026-06-12 (Phase 2)
 
 ---
 
@@ -68,9 +68,9 @@ projects/pitchmind/
 
 - Auth pages need real Supabase env vars to work (middleware + API JWT)
 - DB migration requires Docker Desktop running (`make dev-up` then `make migrate`)
-- `POST /audits` not implemented (Phase 2)
-- Worker task returns placeholder JSON
-- No Stripe, Resend, Perplexity, Ollama Cloud clients yet
+- Perplexity uses **mock mode** when `PERPLEXITY_API_KEY` is unset (dev-friendly)
+- Site auditor + action plan (Ollama Cloud) not yet implemented (Phase 3/5)
+- No Stripe, Resend clients yet
 
 ## What Was Built (2026-06-12)
 
@@ -81,6 +81,14 @@ projects/pitchmind/
 5. Dashboard loads brands from API (PostgreSQL-backed)
 6. Next.js middleware protects `/dashboard` and `/onboarding` routes
 7. Locale-aware redirects on login/signup/onboarding
+
+## What Was Built (2026-06-12 Phase 2)
+
+1. `packages/geo-engine/` — Perplexity client (mock + real), parser, hallucination checker, scorer, batch runner
+2. `apps/worker/tasks/audit.py` — full visibility audit Celery task
+3. `apps/api/routers/audits.py` — POST/GET audits, scorecard endpoints
+4. Dashboard `RunAuditButton` — enqueue audit from UI
+5. Unit tests: parser, scorer, hallucination, runner (11 tests pass)
 
 ---
 

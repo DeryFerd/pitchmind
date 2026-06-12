@@ -59,6 +59,9 @@
     "title": "Dashboard",
     "empty": "Belum ada brand. Selesaikan onboarding untuk audit GEO pertama.",
     "yourBrands": "Brand Anda",
-    "runAudit": "Jalankan audit"
+    "runAudit": "Jalankan audit",
+    "auditRunning": "Memulai audit...",
+    "auditStarted": "Audit dalam antrian ({id}...). Hasil muncul setelah worker selesai.",
+    "auditError": "Gagal memulai audit. Pastikan API dan worker berjalan."
   }
 }
