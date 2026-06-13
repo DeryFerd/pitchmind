@@ -40,7 +40,13 @@ def test_extract_brand_via_citation_domain():
 
 
 def test_sentiment_positive():
-    assert classify_sentiment("PitchMind is the best GEO platform.", "PitchMind") == "positive"
+    assert (
+        classify_sentiment(
+            "PitchMind is the best and most recommended GEO platform available.",
+            "PitchMind",
+        )
+        == "positive"
+    )
 
 
 def test_sentiment_neutral_without_brand():

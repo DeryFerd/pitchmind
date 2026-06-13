@@ -88,8 +88,23 @@ Skip `STRIPE_*` env vars until ready to accept payments.
 
 - Stripe live checkout (user choice)
 - ChatGPT / Gemini engines
-- Sentry, Langfuse, Supabase RLS
+- Langfuse, Sentry, Supabase RLS
 - Historical trend charts (P2)
+- Eval pipeline + labeled dataset (ROAST_REVIEW P5)
+
+---
+
+## ROAST_REVIEW upgrades (2026-06-13) — DONE
+
+| Item | Status |
+|------|--------|
+| Semantic ML (`all-MiniLM-L6-v2`) | sentiment + hallucination |
+| CI pytest + ruff | 35 tests, no `\|\| true` |
+| AgentHarness | budget + circuit breaker + retry |
+| Realistic Perplexity mocks | 4 variants |
+| `get_owned_brand()` in deps.py | deduplicated |
+
+See [ROAST_REVIEW.md](./ROAST_REVIEW.md) for full review context.
 
 ---
 

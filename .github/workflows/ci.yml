@@ -37,5 +37,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install -e ".[dev]" 2>/dev/null || pip install fastapi uvicorn sqlalchemy alembic psycopg2-binary pydantic pydantic-settings python-jose httpx celery redis ollama reportlab stripe ruff pytest
-      - run: ruff check apps/ packages/ || true
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: huggingface-${{ hashFiles('projects/pitchmind/pyproject.toml') }}
+      - run: |
+          pip install \
+            fastapi uvicorn sqlalchemy alembic psycopg2-binary pydantic pydantic-settings \
+            python-jose httpx celery redis ollama reportlab stripe \
+            sentence-transformers numpy \
+            pytest pytest-asyncio ruff
+      - run: ruff check apps/ packages/
+      - run: pytest tests/ -v --tb=short
+        env:
+          PYTHONPATH: packages/db:packages/geo-engine:packages/site-auditor:packages/harness:.

@@ -40,7 +40,10 @@ async def run_visibility_batch(
     client: PerplexityClient | None = None,
     concurrency: int = 3,
 ) -> list[ParsedQueryResult]:
-    perplexity = client or PerplexityClient()
+    perplexity = client or PerplexityClient(
+        mock_brand=brand_name,
+        mock_competitors=competitors,
+    )
     semaphore = asyncio.Semaphore(concurrency)
     results: list[ParsedQueryResult] = []
 

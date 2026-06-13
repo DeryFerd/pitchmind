@@ -18,6 +18,8 @@ dependencies = [
     "ollama>=0.4.0",
     "reportlab>=4.2.0",
     "stripe>=11.0.0",
+    "sentence-transformers>=3.0.0",
+    "numpy>=1.26.0",
 ]
 
 [project.optional-dependencies]
@@ -27,12 +29,26 @@ dev = [
     "ruff>=0.8.0",
 ]
 
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+"packages/db/alembic/**" = ["E501", "UP035", "UP007"]
+"apps/api/middleware/**" = ["E501"]
+"apps/api/services/**" = ["E501", "I001"]
+"apps/worker/**" = ["E501"]
+"packages/db/pitchmind_db/**" = ["E501"]
+"packages/geo-engine/pitchmind_geo/action_plan.py" = ["E501"]
+"packages/geo-engine/pitchmind_geo/scorer.py" = ["E501"]
+"packages/site-auditor/**" = ["E501", "F841"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

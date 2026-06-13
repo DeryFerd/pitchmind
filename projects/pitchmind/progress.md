@@ -1,8 +1,8 @@
 # PitchMind — Progress Tracker
 
-> Last updated: 2026-06-12  
-> Current phase: **MVP product complete — deploy + beta pending**  
-> Overall progress: **~95%**
+> Last updated: 2026-06-13  
+> Current phase: **MVP + ROAST_REVIEW upgrades — deploy + beta pending**  
+> Overall progress: **~96%**
 
 ---
 
@@ -13,46 +13,53 @@
 | Phases 1–5 (core product) | DONE |
 | Phase 6 billing (code) | DONE (Stripe live skipped) |
 | MVP gap fill (settings, facts, email, SSE) | **DONE** |
+| ROAST_REVIEW P1–P4 (ML, CI, harness, mocks) | **DONE** |
 | Repo docs (README + STRUCTURE.md) | **DONE** |
 | Production deploy | not_started |
 | Phase 7 beta + launch | not_started |
 
 ---
 
-## Latest: MVP gap fill (2026-06-12)
+## Latest: ROAST_REVIEW implementation (2026-06-13)
 
-### Product polish — DONE
+### P1 — Semantic ML component — DONE
 
-- [x] Brand facts in onboarding (pricing, features, location)
-- [x] Query template picker (saas / local / ecom)
-- [x] 25 golden queries per template (13 EN + 12 ID)
-- [x] Brand settings page (`/dashboard/brands/[id]/settings`)
-- [x] Competitor + custom query management
-- [x] Competitor limit per tier (2 free / 5 pro+)
-- [x] Hallucination diff UI (expandable stated vs expected)
-- [x] Google signup
-- [x] Weekly email: Pro/Team only, EN+ID, SoM delta, top actions, unsubscribe
-- [x] Email preferences in account settings
-- [x] SSE audit progress (`GET /audits/{id}/stream`)
-- [x] Perplexity 7-day Redis cache
-- [x] API cost estimate in scorecard
-- [x] Harness retry helper
-- [x] Integration test (mock audit pipeline)
-- [x] Migration 003 (`email_digest_enabled`)
-- [x] PRD / Plan / system-design status synced
+- [x] `packages/geo-engine/pitchmind_geo/semantic.py` — `all-MiniLM-L6-v2` CPU inference
+- [x] Embedding-based sentiment (regex fallback)
+- [x] Semantic hallucination detection vs brand facts
+- [x] `sentence-transformers` + `numpy` in dependencies + Dockerfiles
 
-### Repo documentation — DONE (2026-06-12)
+### P2 — CI fix — DONE
 
-- [x] [README.md](../../README.md) refreshed — MVP status, quick start, stack
-- [x] [STRUCTURE.md](../../STRUCTURE.md) — final architecture map (layers, connections, API map)
+- [x] `pytest tests/` in GitHub Actions (was skipped)
+- [x] `ruff check` without `|| true`
+- [x] HuggingFace model cache in CI
+- [x] **35 tests** passing (was 26)
 
-### Still pending
+### P3 — AgentHarness — DONE
+
+- [x] Budget cap (`BudgetExhausted`)
+- [x] Circuit breaker (`CircuitOpen`)
+- [x] Retry with exponential backoff
+- [x] Wired into `PerplexityClient` (live mode)
+
+### P4 — Realistic mock responses — DONE
+
+- [x] 4 mock templates: brand positive, competitor leads, hallucination, mixed
+- [x] Hash-based variant selection (no longer always SoM 100%)
+
+### Code quality — DONE
+
+- [x] `get_owned_brand()` consolidated in `apps/api/deps.py`
+- [x] Ruff per-file ignores for legacy migration/site-auditor noise
+
+### Still pending (ROAST_REVIEW P0/P5)
 
 - [ ] Production deploy (Vercel + Railway + Supabase)
-- [ ] Stripe live (skipped by choice)
-- [ ] Sentry + Langfuse
+- [ ] Langfuse + Sentry observability
+- [ ] Eval pipeline (50-item labeled dataset + CI gate)
 - [ ] Supabase RLS policies
-- [ ] ChatGPT/Gemini multi-engine (PRD stretch)
+- [ ] Stripe live (skipped by choice)
 - [ ] Phase 7 beta users + case study
 
 ---
@@ -60,13 +67,14 @@
 ## Tests
 
 ```bash
-pytest tests/           # 26 passed (25 unit + 1 integration)
+pytest tests/           # 35 passed (32 unit + 1 integration + 2 harness)
 cd apps/web && npm run build
+ruff check apps/ packages/
 ```
 
 ---
 
 ## Links
 
-- [STRUCTURE.md](../../STRUCTURE.md) | [README.md](../../README.md)
+- [ROAST_REVIEW.md](./ROAST_REVIEW.md) | [STRUCTURE.md](../../STRUCTURE.md) | [README.md](../../README.md)
 - [PRD](./PRD.md) | [Plan](./Plan.md) | [handoff.md](./handoff.md) | [memory.md](./memory.md)

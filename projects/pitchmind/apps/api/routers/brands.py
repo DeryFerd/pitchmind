@@ -2,7 +2,7 @@ import os
 import sys
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "packages", "db"))
@@ -10,9 +10,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "pa
 from pitchmind_db.models import Brand, BrandFacts, Competitor, GoldenQuery, QueryLang, Workspace
 from pitchmind_db.seed_templates import render_templates
 
-from apps.api.deps import get_db
+from apps.api.deps import get_db, get_owned_brand
 from apps.api.middleware.auth import AuthUser, get_current_user
-from apps.api.services.billing import check_brand_limit, check_competitor_limit
 from apps.api.schemas import (
     BrandCreate,
     BrandDetailOut,
@@ -25,18 +24,9 @@ from apps.api.schemas import (
     GoldenQueryOut,
     QuerySeedRequest,
 )
+from apps.api.services.billing import check_brand_limit, check_competitor_limit
 
 router = APIRouter(prefix="/api/v1", tags=["brands"])
-
-
-def _get_owned_brand(db: Session, brand_id: uuid.UUID, auth: AuthUser) -> Brand:
-    brand = db.get(Brand, brand_id)
-    if not brand:
-        raise HTTPException(status_code=404, detail="Brand not found")
-    workspace = db.get(Workspace, brand.workspace_id)
-    if not workspace or workspace.owner_id != auth.id:
-        raise HTTPException(status_code=403, detail="Forbidden")
-    return brand
 
 
 def _brand_detail(brand: Brand) -> BrandDetailOut:
@@ -68,7 +58,7 @@ def get_brand(
     auth: AuthUser = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    brand = _get_owned_brand(db, brand_id, auth)
+    brand = get_owned_brand(db, brand_id, auth)
     return _brand_detail(brand)
 
 
@@ -112,7 +102,7 @@ def update_brand(
     auth: AuthUser = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    brand = _get_owned_brand(db, brand_id, auth)
+    brand = get_owned_brand(db, brand_id, auth)
     if body.name is not None:
         brand.name = body.name
     if body.website_url is not None:
@@ -142,7 +132,7 @@ def add_competitor(
     auth: AuthUser = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    _get_owned_brand(db, brand_id, auth)
+    get_owned_brand(db, brand_id, auth)
     check_competitor_limit(db, auth.id, brand_id)
     competitor = Competitor(
         id=uuid.uuid4(),
@@ -163,7 +153,7 @@ def delete_competitor(
     auth: AuthUser = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    _get_owned_brand(db, brand_id, auth)
+    get_owned_brand(db, brand_id, auth)
     competitor = db.get(Competitor, competitor_id)
     if not competitor or competitor.brand_id != brand_id:
         raise HTTPException(status_code=404, detail="Competitor not found")
@@ -177,7 +167,7 @@ def list_queries(
     auth: AuthUser = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    _get_owned_brand(db, brand_id, auth)
+    get_owned_brand(db, brand_id, auth)
     return db.query(GoldenQuery).filter(GoldenQuery.brand_id == brand_id).all()
 
 
@@ -188,7 +178,7 @@ def add_query(
     auth: AuthUser = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    _get_owned_brand(db, brand_id, auth)
+    get_owned_brand(db, brand_id, auth)
     query = GoldenQuery(
         id=uuid.uuid4(),
         brand_id=brand_id,
@@ -210,7 +200,7 @@ def delete_query(
     auth: AuthUser = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    _get_owned_brand(db, brand_id, auth)
+    get_owned_brand(db, brand_id, auth)
     query = db.get(GoldenQuery, query_id)
     if not query or query.brand_id != brand_id:
         raise HTTPException(status_code=404, detail="Query not found")
@@ -218,14 +208,18 @@ def delete_query(
     db.commit()
 
 
-@router.post("/brands/{brand_id}/queries/seed", response_model=list[GoldenQueryOut], status_code=201)
+@router.post(
+    "/brands/{brand_id}/queries/seed",
+    response_model=list[GoldenQueryOut],
+    status_code=201,
+)
 def seed_queries(
     brand_id: uuid.UUID,
     body: QuerySeedRequest,
     auth: AuthUser = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    brand = _get_owned_brand(db, brand_id, auth)
+    brand = get_owned_brand(db, brand_id, auth)
     competitors = db.query(Competitor).filter(Competitor.brand_id == brand_id).all()
     competitor_name = competitors[0].name if competitors else "Competitor"
 

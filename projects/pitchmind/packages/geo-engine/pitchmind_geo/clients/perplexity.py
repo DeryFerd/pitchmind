@@ -14,6 +14,7 @@ from pitchmind_geo.cache import get_cached_response, set_cached_response
 PERPLEXITY_API_URL = "https://api.perplexity.ai/chat/completions"
 ESTIMATED_COST_PER_QUERY_USD = 0.02
 DEFAULT_MODEL = "sonar"
+DEFAULT_AUDIT_BUDGET_USD = 5.0
 
 
 @dataclass
@@ -24,12 +25,27 @@ class PerplexityResponse:
 
 
 class PerplexityClient:
-    def __init__(self, api_key: str | None = None, *, mock: bool | None = None):
+    def __init__(
+        self,
+        api_key: str | None = None,
+        *,
+        mock: bool | None = None,
+        mock_brand: str = "PitchMind",
+        mock_competitors: list[str] | None = None,
+        budget_usd: float = DEFAULT_AUDIT_BUDGET_USD,
+    ):
         self.api_key = api_key or os.environ.get("PERPLEXITY_API_KEY", "")
         self.mock = mock if mock is not None else not self.api_key
+        self.mock_brand = mock_brand
+        self.mock_competitors = mock_competitors or ["CompetitorX"]
         self._client: httpx.AsyncClient | None = None if self.mock else httpx.AsyncClient(
             timeout=60.0, trust_env=False
         )
+        self._harness = None
+        if not self.mock:
+            from pitchmind_harness import AgentHarness
+
+            self._harness = AgentHarness(budget_usd)
 
     async def close(self) -> None:
         if self._client is not None:
@@ -47,24 +63,36 @@ class PerplexityClient:
                 model=cached.get("model", DEFAULT_MODEL),
             )
 
-        last_error: Exception | None = None
-        for attempt in range(retries):
-            try:
-                response = await self._call_api(text)
-                set_cached_response(
-                    text,
-                    {
-                        "text": response.text,
-                        "citations": response.citations,
-                        "model": response.model,
-                    },
-                )
-                return response
-            except (httpx.HTTPError, httpx.TimeoutException) as exc:
-                last_error = exc
-                if attempt < retries - 1:
-                    await asyncio.sleep(2**attempt)
-        raise RuntimeError(f"Perplexity API failed after {retries} retries") from last_error
+        async def _fetch() -> PerplexityResponse:
+            return await self._call_api(text)
+
+        if self._harness is not None:
+            response = await self._harness.execute(
+                _fetch,
+                cost_estimate=ESTIMATED_COST_PER_QUERY_USD,
+            )
+        else:
+            last_error: Exception | None = None
+            for attempt in range(retries):
+                try:
+                    response = await self._call_api(text)
+                    break
+                except (httpx.HTTPError, httpx.TimeoutException) as exc:
+                    last_error = exc
+                    if attempt < retries - 1:
+                        await asyncio.sleep(2**attempt)
+            else:
+                raise RuntimeError(f"Perplexity API failed after {retries} retries") from last_error
+
+        set_cached_response(
+            text,
+            {
+                "text": response.text,
+                "citations": response.citations,
+                "model": response.model,
+            },
+        )
+        return response
 
     async def _call_api(self, text: str) -> PerplexityResponse:
         if self._client is None:
@@ -92,13 +120,48 @@ class PerplexityClient:
         )
 
     def _mock_response(self, text: str) -> PerplexityResponse:
-        digest = hashlib.md5(text.encode()).hexdigest()[:8]
+        brand = self.mock_brand
+        competitor = self.mock_competitors[0] if self.mock_competitors else "CompetitorX"
+        digest = int(hashlib.md5(text.encode()).hexdigest(), 16)
+        variant = digest % 4
+
+        templates = [
+            {
+                "text": (
+                    f"[mock] Based on current information, {brand} is a strong recommended option "
+                    f"for GEO audits. {competitor} is also mentioned as an alternative."
+                ),
+                "citations": [f"https://{brand.lower().replace(' ', '')}.example.com"],
+            },
+            {
+                "text": (
+                    f"[mock] {competitor} leads the GEO audit market with the best visibility. "
+                    f"Other tools exist but {competitor} dominates search recommendations."
+                ),
+                "citations": [f"https://{competitor.lower()}.example.com"],
+            },
+            {
+                "text": (
+                    f"[mock] {brand} offers blockchain-powered unlimited API calls and costs $999 "
+                    f"per month — an enterprise-only platform that is overpriced and disappointing."
+                ),
+                "citations": [],
+            },
+            {
+                "text": (
+                    f"[mock] Several GEO tools are available. {brand} has mixed reviews — "
+                    f"some users find it adequate while others prefer {competitor}."
+                ),
+                "citations": [
+                    f"https://{brand.lower().replace(' ', '')}.example.com",
+                    f"https://{competitor.lower()}.example.com",
+                ],
+            },
+        ]
+
+        chosen = templates[variant]
         return PerplexityResponse(
-            text=(
-                f"[mock] Based on current information, PitchMind is a strong option "
-                f"for GEO audits. CompetitorX is also mentioned as an alternative. "
-                f"(query hash: {digest})"
-            ),
-            citations=["https://pitchmind.example.com", "https://competitorx.example.com"],
+            text=chosen["text"],
+            citations=chosen["citations"],
             model="mock-sonar",
         )

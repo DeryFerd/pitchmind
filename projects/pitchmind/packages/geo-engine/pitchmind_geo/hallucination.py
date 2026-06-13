@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from dataclasses import dataclass
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -12,6 +15,21 @@ class BrandFactsData:
     features: list[str] | None = None
     location: str | None = None
     founded_year: int | None = None
+
+
+def _facts_to_strings(facts: BrandFactsData) -> list[str]:
+    strings: list[str] = []
+    if facts.pricing:
+        monthly = facts.pricing.get("monthly") or facts.pricing.get("price")
+        if monthly is not None:
+            strings.append(f"Pricing is ${monthly} per month")
+    if facts.features:
+        strings.extend(f"Feature: {feature}" for feature in facts.features)
+    if facts.location:
+        strings.append(f"Located in {facts.location}")
+    if facts.founded_year:
+        strings.append(f"Founded in {facts.founded_year}")
+    return strings
 
 
 def _extract_prices(text: str) -> list[float]:
@@ -85,6 +103,15 @@ def check_hallucinations(
                     "expected": facts.founded_year,
                     "severity": "low",
                 })
+
+    fact_strings = _facts_to_strings(facts)
+    if fact_strings:
+        try:
+            from pitchmind_geo.semantic import detect_semantic_hallucinations
+
+            flags.extend(detect_semantic_hallucinations(response, brand_name, fact_strings))
+        except Exception as exc:
+            logger.debug("Semantic hallucination check skipped: %s", exc)
 
     return flags
 

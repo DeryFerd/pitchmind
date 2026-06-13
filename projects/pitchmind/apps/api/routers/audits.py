@@ -13,15 +13,20 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "pa
 from pitchmind_db.models import (
     AuditRun,
     AuditStatus,
-    Brand,
     GoldenQuery,
     QueryResult,
-    Workspace,
 )
 
-from apps.api.deps import get_db
+from apps.api.deps import get_db, get_owned_brand
 from apps.api.middleware.auth import AuthUser, get_current_user
-from apps.api.schemas import AuditCreate, AuditDetail, AuditOut, AuditSummary, QueryResultOut, SiteFindingOut
+from apps.api.schemas import (
+    AuditCreate,
+    AuditDetail,
+    AuditOut,
+    AuditSummary,
+    QueryResultOut,
+    SiteFindingOut,
+)
 from apps.api.services.billing import check_audit_limits, record_audit_usage
 from apps.api.services.pdf_export import build_audit_pdf
 
@@ -51,16 +56,6 @@ def _audit_summary(audit: AuditRun, query_count: int) -> AuditSummary:
     )
 
 
-def _get_owned_brand(db: Session, brand_id: uuid.UUID, auth: AuthUser) -> Brand:
-    brand = db.get(Brand, brand_id)
-    if not brand:
-        raise HTTPException(status_code=404, detail="Brand not found")
-    workspace = db.get(Workspace, brand.workspace_id)
-    if not workspace or workspace.owner_id != auth.id:
-        raise HTTPException(status_code=403, detail="Forbidden")
-    return brand
-
-
 @router.post(
     "/brands/{brand_id}/audits",
     response_model=AuditOut,
@@ -72,7 +67,7 @@ def start_audit(
     auth: AuthUser = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    brand = _get_owned_brand(db, brand_id, auth)
+    brand = get_owned_brand(db, brand_id, auth)
 
     running = (
         db.query(AuditRun)
@@ -133,7 +128,7 @@ def get_audit(
     audit = db.get(AuditRun, audit_id)
     if not audit:
         raise HTTPException(status_code=404, detail="Audit not found")
-    _get_owned_brand(db, audit.brand_id, auth)
+    get_owned_brand(db, audit.brand_id, auth)
 
     results = db.query(QueryResult).filter(QueryResult.audit_run_id == audit_id).all()
     query_results: list[QueryResultOut] = []
@@ -193,7 +188,7 @@ async def stream_audit(
     audit = db.get(AuditRun, audit_id)
     if not audit:
         raise HTTPException(status_code=404, detail="Audit not found")
-    _get_owned_brand(db, audit.brand_id, auth)
+    get_owned_brand(db, audit.brand_id, auth)
 
     async def event_generator():
         for _ in range(90):
@@ -225,7 +220,7 @@ def list_audits(
     auth: AuthUser = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    _get_owned_brand(db, brand_id, auth)
+    get_owned_brand(db, brand_id, auth)
     audits = (
         db.query(AuditRun)
         .filter(AuditRun.brand_id == brand_id)
@@ -242,7 +237,7 @@ def get_latest_scorecard(
     auth: AuthUser = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    _get_owned_brand(db, brand_id, auth)
+    get_owned_brand(db, brand_id, auth)
     audit = (
         db.query(AuditRun)
         .filter(
@@ -266,7 +261,7 @@ def export_audit_pdf(
     audit = db.get(AuditRun, audit_id)
     if not audit:
         raise HTTPException(status_code=404, detail="Audit not found")
-    brand = _get_owned_brand(db, audit.brand_id, auth)
+    brand = get_owned_brand(db, audit.brand_id, auth)
 
     action_items = audit.action_plan.items if audit.action_plan else []
     pdf_bytes = build_audit_pdf(

@@ -45,7 +45,9 @@ def extract_mentions(
     brand_domain = _domain_from_url(brand_website)
 
     brand_in_text = _fuzzy_in_text(brand_name, response)
-    brand_in_citations = any(brand_domain and brand_domain in _domain_from_url(c) for c in citations)
+    brand_in_citations = any(
+        brand_domain and brand_domain in _domain_from_url(c) for c in citations
+    )
     brand_mentioned = brand_in_text or brand_in_citations
 
     competitors_mentioned: dict[str, bool] = {}
@@ -71,8 +73,7 @@ _NEGATIVE = re.compile(
 )
 
 
-def classify_sentiment(response: str, brand_name: str) -> str:
-    """Rule-based sentiment for brand context (MVP)."""
+def _classify_sentiment_rules(response: str, brand_name: str) -> str:
     sentences = re.split(r"[.!?]\s+", response)
     brand_sentences = [s for s in sentences if _fuzzy_in_text(brand_name, s)]
     if not brand_sentences:
@@ -84,3 +85,13 @@ def classify_sentiment(response: str, brand_name: str) -> str:
     if _POSITIVE.search(text):
         return "positive"
     return "neutral"
+
+
+def classify_sentiment(response: str, brand_name: str) -> str:
+    """Embedding-based sentiment with regex fallback."""
+    try:
+        from pitchmind_geo.semantic import classify_sentiment_semantic
+
+        return classify_sentiment_semantic(response, brand_name) or "neutral"
+    except Exception:
+        return _classify_sentiment_rules(response, brand_name)

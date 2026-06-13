@@ -7,8 +7,8 @@ from sqlalchemy import engine_from_config, pool
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from pitchmind_db.base import Base
 from pitchmind_db import models  # noqa: F401
+from pitchmind_db.base import Base
 
 config = context.config
 if config.config_file_name is not None:
