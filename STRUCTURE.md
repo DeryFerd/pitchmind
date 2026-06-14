@@ -1,6 +1,6 @@
 # PitchMind — Repository Structure & Architecture Map
 
-> Last updated: 2026-06-12  
+> Last updated: 2026-06-13  
 > Scope: final architecture as implemented in `projects/pitchmind/`  
 > Companion: [README.md](README.md) · [system-design.md](projects/pitchmind/system-design.md)
 
@@ -65,14 +65,16 @@ flowchart TB
     Celery --> Perplexity
     Celery --> Ollama
     Celery --> Resend
-    Celery --> PG
+    Celery -->|publish audit:progress| Redis
+    FastAPI -->|SSE subscribe| Redis
     Beat -->|cron| Celery
     Geo --> Redis
+    Celery --> PG
     FastAPI --> Stripe
     DBpkg --> PG
 ```
 
-**Request path (typical):** Browser → Next.js → Supabase login → JWT attached to API calls → FastAPI validates → reads/writes PostgreSQL or enqueues Celery task → Worker calls AI APIs → results stored → Web polls/SSE for status.
+**Request path (typical):** Browser → Next.js → Supabase login → JWT attached to API calls → FastAPI validates → reads/writes PostgreSQL or enqueues Celery task → Worker calls AI APIs → results stored → Web polls/SSE for status (SSE via Redis pub/sub `audit:progress:{id}`).
 
 ---
 
@@ -90,7 +92,7 @@ projects/pitchmind/
 │   ├── db/                        # Database layer
 │   ├── geo-engine/                # AI visibility engine
 │   ├── site-auditor/              # Website crawl + checks
-│   └── harness/                   # Retry utilities
+│   └── harness/                   # AgentHarness: budget, circuit breaker, retry
 │
 ├── infra/                         # Dev & deploy config
 │   ├── docker-compose.yml         # Local Postgres + Redis
@@ -98,10 +100,11 @@ projects/pitchmind/
 │   └── railway.worker.toml        # Railway worker deploy
 │
 ├── tests/
-│   ├── unit/                      # 25 unit tests
-│   └── integration/               # Pipeline integration test
+│   ├── unit/                      # Unit + API route tests
+│   ├── integration/               # Pipeline integration test
+│   └── eval/                      # ML eval dataset + metrics gate
 │
-├── Makefile                       # dev-up, api, web, worker, beat, migrate
+├── Makefile                       # dev-up, api, web, worker, beat, migrate, test, lint
 ├── pyproject.toml                 # Python deps (api + worker + packages)
 └── .env.example                   # All env vars documented
 ```
@@ -161,7 +164,7 @@ apps/api/main.py
 |--------|--------|---------|------------|
 | `workspaces.py` | `/api/v1/workspaces` | Create/list workspaces, list brands | **PostgreSQL** via `pitchmind_db` |
 | `brands.py` | `/api/v1` | Brand CRUD, competitors, golden queries | PostgreSQL + **billing** brand/competitor limits |
-| `audits.py` | `/api/v1` | Start audit, results, SSE, PDF | PostgreSQL + **Celery** (`run_visibility_audit`) |
+| `audits.py` | `/api/v1` | Start audit, results, SSE, PDF | PostgreSQL + **Celery** + **Redis pub/sub** |
 | `billing.py` | `/api/v1/billing` | Subscription status, Stripe checkout/portal | **Stripe API** + PostgreSQL |
 | `webhooks.py` | `/api/v1/webhooks` | Stripe events | Updates **subscriptions** table |
 | `account.py` | `/api/v1/account` | Email digest preferences | **users** table |
@@ -172,7 +175,7 @@ apps/api/main.py
 apps/api/
 ├── main.py                 # App assembly
 ├── config.py               # Settings from .env
-├── deps.py                 # DB session injection
+├── deps.py                 # DB session + get_owned_brand()
 ├── schemas.py              # Pydantic request/response models
 ├── middleware/
 │   ├── auth.py             # Supabase JWT → AuthUser
@@ -181,7 +184,8 @@ apps/api/
 └── services/
     ├── billing.py          # Tier limits, usage counters
     ├── stripe_service.py   # Checkout, portal, webhooks handler
-    └── pdf_export.py       # ReportLab PDF generation
+    ├── pdf_export.py       # ReportLab PDF generation
+    └── audit_stream.py     # SSE via Redis pub/sub (+ DB fallback)
 ```
 
 **Auth flow:** Every protected route uses `Depends(get_current_user)` → decodes `Authorization: Bearer <jwt>` with `SUPABASE_JWT_SECRET` → yields `AuthUser(id, email)`.
@@ -209,7 +213,7 @@ POST /api/v1/brands/{id}/audits
 | GET/POST/DELETE | `/api/v1/brands/{id}/queries...` | Brand settings, seed templates |
 | POST | `/api/v1/brands/{id}/audits` | RunAuditButton |
 | GET | `/api/v1/audits/{id}` | Audit detail, polling |
-| GET | `/api/v1/audits/{id}/stream` | SSE progress (optional) |
+| GET | `/api/v1/audits/{id}/stream` | SSE progress via Redis `audit:progress:{id}` |
 | GET | `/api/v1/audits/{id}/export/pdf` | ExportPdfButton |
 | GET | `/api/v1/brands/{id}/audits` | Audit history |
 | GET | `/api/v1/brands/{id}/scorecard` | Dashboard scorecards |
@@ -253,9 +257,11 @@ sequenceDiagram
 
     API->>Redis: audit.run_visibility_audit.delay()
     W->>DB: status = running
+    W->>Redis: publish audit:progress (running)
     W->>Geo: run_visibility_batch()
-    Geo->>Geo: PerplexityClient (cache → API)
-    Geo->>Geo: parser + hallucination + scorer
+    Geo->>Geo: PerplexityClient + AgentHarness (live)
+    Geo->>Geo: parser + semantic + hallucination + scorer
+    W->>Redis: publish per query complete
     W->>DB: INSERT query_results, scorecard
     W->>Site: run_site_audit(url)
     Site->>Site: crawler → 7 checks
@@ -264,6 +270,7 @@ sequenceDiagram
     Ollama-->>W: JSON items (or template fallback)
     W->>DB: INSERT action_plans
     W->>DB: status = completed
+    W->>Redis: publish audit:progress (completed)
 ```
 
 **Task name:** `audit.run_visibility_audit` in `tasks/audit.py`  
@@ -279,6 +286,7 @@ sequenceDiagram
 |-------|------|---------|
 | Models | `pitchmind_db/models.py` | API routers, worker tasks |
 | Session | `pitchmind_db/base.py` | `apps/api/deps.py`, worker |
+| Audit progress | `pitchmind_db/audit_progress.py` | Redis pub/sub for SSE |
 | Migrations | `alembic/versions/001..003` | `make migrate` |
 | Query templates | `pitchmind_db/seed_templates.py` | `POST .../queries/seed` |
 
@@ -288,12 +296,13 @@ sequenceDiagram
 
 | Module | Role | External |
 |--------|------|----------|
-| `clients/perplexity.py` | Query AI with citations | **Perplexity API** (mock if no key) |
+| `clients/perplexity.py` | Query AI with citations + realistic mocks | **Perplexity API** (mock if no key) |
 | `cache.py` | 7-day response cache | **Redis** |
-| `parser.py` | Brand/competitor mentions, sentiment | — |
-| `hallucination.py` | Compare vs BrandFacts | Uses onboarding/settings facts |
+| `semantic.py` | ML embeddings — sentiment + hallucination | **sentence-transformers** (CPU) |
+| `parser.py` | Brand/competitor mentions, sentiment | Uses `semantic.py` + regex fallback |
+| `hallucination.py` | Rule checks + semantic vs BrandFacts | Uses onboarding/settings facts |
 | `scorer.py` | SoM, accuracy, competitor gap | — |
-| `runner.py` | Batch orchestration | Called by worker |
+| `runner.py` | Batch orchestration + progress callback | Called by worker |
 | `action_plan.py` | Prioritized fixes JSON | — |
 | `clients/ollama_cloud.py` | LLM action plan | **Ollama Cloud API** |
 
@@ -310,11 +319,11 @@ sequenceDiagram
 | `readiness_score.py` | Weighted 0–100 score |
 | `auditor.py` | Orchestrates all checks |
 
-### 6.4 `packages/harness` — Utilities
+### 6.4 `packages/harness` — Agent harness
 
 | Module | Role |
 |--------|------|
-| `pitchmind_harness/__init__.py` | `retry_async()` for resilient API calls |
+| `pitchmind_harness/__init__.py` | `AgentHarness` — budget cap, circuit breaker, `retry_async()` |
 
 ---
 
@@ -331,10 +340,12 @@ sequenceDiagram
 ```
 make dev-up     → docker-compose (Postgres + Redis)
 make migrate    → Alembic → Postgres
-make api        → uvicorn :8000  (PYTHONPATH=packages/db;apps)
+make api        → uvicorn :8000  (PYTHONPATH=packages/* + project root)
 make worker     → Celery consumer ← Redis broker
 make beat       → Celery scheduler
 make web        → Next.js :3000  → calls API + Supabase
+make test       → pytest (41 tests)
+make lint       → ruff check apps/ packages/
 ```
 
 ### Production target (not live yet)
@@ -356,15 +367,15 @@ make web        → Next.js :3000  → calls API + Supabase
 | Web | Supabase | HTTPS | Login, signup, OAuth, session |
 | Web | API | HTTPS + JWT | All business data |
 | API | Postgres | TCP/SQL | CRUD, tier usage |
-| API | Redis | TCP | Enqueue Celery tasks |
+| API | Redis | TCP | Enqueue Celery tasks + SSE pub/sub subscribe |
 | API | Stripe | HTTPS | Checkout, webhooks (when live) |
 | Worker | Postgres | TCP/SQL | Read brand/queries, write results |
-| Worker | Redis | TCP | Task broker + Perplexity cache |
+| Worker | Redis | TCP | Task broker, Perplexity cache, audit progress publish |
 | Worker | Perplexity | HTTPS | Visibility queries |
 | Worker | Ollama Cloud | HTTPS | Action plan generation |
 | Worker | Resend | HTTPS | Weekly digest emails |
 | Beat | Worker | Redis | Scheduled tasks |
-| CI | GitHub | — | Lint web, ruff API, pytest |
+| CI | GitHub | — | Web build, pytest (41), ruff, ML eval gate, `.env` guard |
 
 ---
 
@@ -393,11 +404,12 @@ flowchart LR
 
 | Location | Count | Covers |
 |----------|-------|--------|
-| `tests/unit/` | 25 | Billing, geo parser/scorer, site auditor, action plan, seeds |
+| `tests/unit/` | 38 | Billing, geo parser/scorer/semantic, harness, site auditor, API routes |
 | `tests/integration/` | 1 | Mock visibility batch → scorecard |
-| `.github/workflows/ci.yml` | — | `npm run build` (web), `ruff` (api) |
+| `tests/eval/` | 1 | ML eval dataset (30 items) — precision/recall/F1 gate |
+| `.github/workflows/ci.yml` | — | `npm run build` (web), `pytest`, `ruff`, `.env` tracked-file guard |
 
-Run: `cd projects/pitchmind && pytest tests/`
+Run: `cd projects/pitchmind && make test` or `pytest tests/` (41 passed)
 
 ---
 
@@ -423,4 +435,4 @@ Run: `cd projects/pitchmind && pytest tests/`
 | ChatGPT / Gemini engines | PRD stretch; only Perplexity in MVP |
 | Supabase RLS | Auth at API layer only |
 | Sentry / Langfuse | Env placeholders in `.env.example` |
-| SSE in UI | API endpoint exists; web uses polling |
+| SSE in UI | API uses Redis pub/sub; web still polls (SSE endpoint ready) |
