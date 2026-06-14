@@ -1,6 +1,6 @@
 # PitchMind — Project Memory
 
-> Last updated: 2026-06-13 (ROAST_REVIEW upgrades)
+> Last updated: 2026-06-13 (ROAST_REVIEW round 2)
 
 ---
 
@@ -9,8 +9,8 @@
 - **Name:** PitchMind — GEO audit SaaS
 - **Repo:** https://github.com/DeryFerd/pitchmind
 - **Local path:** `projects/pitchmind`
-- **Status:** MVP + ML upgrades ~96% — deploy + beta next
-- **Architecture map:** [STRUCTURE.md](../../STRUCTURE.md) (repo root)
+- **Status:** MVP hardened ~97% — deploy + beta blocked on credentials only
+- **Architecture map:** [STRUCTURE.md](../../STRUCTURE.md)
 - **Portfolio README:** [README.md](../../README.md)
 
 ---
@@ -23,9 +23,10 @@
 | API | FastAPI, JWT, tier limits (Stripe code present, live skipped) |
 | Worker | Celery + Redis + Beat |
 | Visibility | Perplexity API (mock if no key, 7-day Redis cache) |
-| **ML inference** | **sentence-transformers `all-MiniLM-L6-v2` — sentiment + hallucination** |
+| ML inference | sentence-transformers `all-MiniLM-L6-v2` — sentiment + hallucination |
 | Action plan | Ollama Cloud — `gpt-oss:20b-cloud` |
 | Agent harness | Budget cap, circuit breaker, retry (Perplexity live) |
+| SSE progress | Redis pub/sub `audit:progress:{id}` |
 | Email | Resend — Pro/Team weekly digest only |
 | PDF | reportlab |
 
@@ -34,56 +35,34 @@
 ## Key paths (latest)
 
 ```
-packages/geo-engine/pitchmind_geo/semantic.py           # ML: embeddings, sentiment, hallucination
-packages/harness/pitchmind_harness/__init__.py        # AgentHarness (budget + circuit breaker)
-packages/geo-engine/pitchmind_geo/clients/perplexity.py # Realistic mocks + harness integration
-apps/api/deps.py                                      # get_owned_brand() shared dependency
-tests/conftest.py                                     # Fake encoder for offline unit tests
-.github/workflows/ci.yml                              # pytest + ruff (no || true)
+packages/db/pitchmind_db/audit_progress.py          # Redis pub/sub for SSE
+apps/api/services/audit_stream.py                   # SSE generator (pub/sub + fallback)
+tests/eval/fixtures/ml_eval_dataset.json          # 30-item labeled ML eval set
+tests/eval/test_ml_eval.py                          # precision/recall/F1 CI gate
+tests/unit/test_api_routes.py                       # FastAPI route tests
+tests/conftest.py                                   # PYTHONPATH bootstrap + fake encoder
+Makefile                                            # unified PYTHONPATH for api/worker/test
 ```
-
----
-
-## Tier limits
-
-| Tier | Brands | Competitors | Queries/mo | Queries/audit |
-|------|--------|-------------|------------|---------------|
-| Free | 1 | 2 | 10 | 5 |
-| Pro | 5 | 5 | 200 | 50 |
-| Team | 20 | 5 | 1000 | 100 |
-
-Weekly email: **Pro + Team only** (`user_receives_weekly_email`).
-
-Golden queries: **25** per template seed (13 EN + 12 ID).
-
----
-
-## Decisions
-
-- **Stripe live skipped** — billing code exists; focus product + free deploy first
-- **Brand facts required for good hallucination checks** — rule-based + semantic similarity
-- **Perplexity only** for visibility MVP; ChatGPT/Gemini deferred to v1.1
-- **ROAST_REVIEW addressed** — ML component, CI, harness, realistic mocks (2026-06-13)
 
 ---
 
 ## Dev commands
 
 ```bash
-make migrate          # runs through 003
-make api && make worker && make beat && make web
-pytest tests/         # 35 tests
-ruff check apps/ packages/
+make migrate && make api && make worker && make web
+make test             # 41 tests
+make lint
 ```
+
+`PYTHONPATH=packages/db;packages/geo-engine;packages/site-auditor;packages/harness;.`
 
 ---
 
-## Next session
+## Next session (credential-gated)
 
-1. Deploy Vercel (web) + Railway (API/worker) — free tiers OK
-2. Supabase production + env secrets + RLS
-3. Langfuse traces + Sentry error tracking
-4. Run full E2E audit with real Perplexity + Ollama keys
-5. Phase 7: 10 beta users, case study, Product Hunt
+1. Deploy Vercel + Railway + Supabase + Upstash
+2. Supabase RLS + production secrets
+3. Langfuse + Sentry (optional keys in `.env.example`)
+4. Phase 7: 10 beta users, case study, Product Hunt
 
-New contributors: start with **STRUCTURE.md** for layer map, then `handoff.md` for run commands.
+New contributors: **STRUCTURE.md** → `handoff.md` → `make test`.

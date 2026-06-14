@@ -47,6 +47,12 @@ jobs:
             python-jose httpx celery redis ollama reportlab stripe \
             sentence-transformers numpy \
             pytest pytest-asyncio ruff
+      - run: |
+          tracked=$(git ls-files '**/.env' '**/.env.local' '**/.env.production' | grep -v '.env.example' || true)
+          if [ -n "$tracked" ]; then
+            echo "Secret env files must not be tracked: $tracked"
+            exit 1
+          fi
       - run: ruff check apps/ packages/
       - run: pytest tests/ -v --tb=short
         env:

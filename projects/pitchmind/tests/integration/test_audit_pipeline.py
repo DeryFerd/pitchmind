@@ -2,13 +2,9 @@
 
 from __future__ import annotations
 
-import os
-import sys
 import uuid
 
 import pytest
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "packages", "geo-engine"))
 
 from pitchmind_geo.clients.perplexity import PerplexityClient
 from pitchmind_geo.hallucination import BrandFactsData

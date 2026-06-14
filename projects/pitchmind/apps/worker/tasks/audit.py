@@ -3,15 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-import os
-import sys
 import uuid
 from datetime import UTC, datetime
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "packages", "db"))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "packages", "geo-engine"))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "packages", "site-auditor"))
-
+from pitchmind_db.audit_progress import publish_audit_progress
 from pitchmind_db.base import get_session_factory
 from pitchmind_db.models import (
     ActionPlan,
@@ -100,6 +95,11 @@ def run_visibility_audit(
         audit.status = AuditStatus.RUNNING
         audit.started_at = datetime.now(UTC)
         session.commit()
+        publish_audit_progress(
+            str(audit_uuid),
+            status=AuditStatus.RUNNING.value,
+            query_results_count=0,
+        )
 
         competitors = [c.name for c in brand.competitors]
         facts = None
@@ -115,6 +115,13 @@ def run_visibility_audit(
             GoldenQueryInput(id=q.id, text=q.text, lang=q.lang.value) for q in brand.queries
         ]
 
+        def _on_query_complete(count: int) -> None:
+            publish_audit_progress(
+                str(audit_uuid),
+                status=AuditStatus.RUNNING.value,
+                query_results_count=count,
+            )
+
         parsed = _run_async(
             run_visibility_batch(
                 queries,
@@ -122,6 +129,7 @@ def run_visibility_audit(
                 brand_website=brand.website_url,
                 competitors=competitors,
                 facts=facts,
+                on_query_complete=_on_query_complete,
             )
         )
 
@@ -193,6 +201,12 @@ def run_visibility_audit(
         audit.completed_at = datetime.now(UTC)
         session.commit()
 
+        publish_audit_progress(
+            str(audit_uuid),
+            status=final_status.value,
+            query_results_count=completed,
+        )
+
         return {
             "audit_run_id": audit_run_id,
             "status": audit.status.value,
@@ -210,6 +224,11 @@ def run_visibility_audit(
             audit.status = AuditStatus.FAILED
             audit.completed_at = datetime.now(UTC)
             session.commit()
+            publish_audit_progress(
+                str(audit_uuid),
+                status=AuditStatus.FAILED.value,
+                query_results_count=0,
+            )
         raise self.retry(exc=exc, countdown=30) from exc
     finally:
         session.close()

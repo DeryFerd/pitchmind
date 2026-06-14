@@ -1,8 +1,3 @@
-import os
-import sys
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "packages", "site-auditor"))
-
 from pitchmind_site.schema import check_schema
 
 HTML_WITH_ORG = """

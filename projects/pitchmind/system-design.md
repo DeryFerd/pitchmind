@@ -135,7 +135,7 @@ projects/pitchmind/
 | Billing middleware | Tier limit checks before audit enqueue |
 | Job dispatch | Push audit tasks to Redis |
 | Webhooks | Stripe subscription events |
-| SSE endpoint | Optional stream for audit progress |
+| SSE endpoint | Redis pub/sub progress stream (`audit:progress:{id}`); DB fallback poll every 5s |
 
 ### 4.3 Worker (`apps/worker`)
 
@@ -161,6 +161,7 @@ class CitationParser:
 
 class HallucinationChecker:
     def check(response: str, ground_truth: BrandFacts) -> list[HallucinationFlag]: ...
+    # Rule-based pricing/location checks + sentence-transformers semantic similarity
 
 class Scorer:
     def compute_scorecard(results: list[QueryResult]) -> Scorecard: ...

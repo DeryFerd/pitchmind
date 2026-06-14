@@ -1,11 +1,6 @@
-import os
-import sys
-
 import stripe
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "packages", "db"))
 
 from apps.api.config import settings
 from apps.api.deps import get_db

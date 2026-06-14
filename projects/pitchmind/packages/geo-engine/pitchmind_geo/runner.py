@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass
 from uuid import UUID
 
 from pitchmind_geo.clients.perplexity import PerplexityClient
 from pitchmind_geo.hallucination import BrandFactsData, check_hallucinations
 from pitchmind_geo.parser import classify_sentiment, extract_mentions
+
+OnQueryComplete = Callable[[int], None]
 
 
 @dataclass
@@ -39,6 +42,7 @@ async def run_visibility_batch(
     facts: BrandFactsData | None = None,
     client: PerplexityClient | None = None,
     concurrency: int = 3,
+    on_query_complete: OnQueryComplete | None = None,
 ) -> list[ParsedQueryResult]:
     perplexity = client or PerplexityClient(
         mock_brand=brand_name,
@@ -46,6 +50,16 @@ async def run_visibility_batch(
     )
     semaphore = asyncio.Semaphore(concurrency)
     results: list[ParsedQueryResult] = []
+    completed_count = 0
+    count_lock = asyncio.Lock()
+
+    async def _notify_progress() -> None:
+        nonlocal completed_count
+        async with count_lock:
+            completed_count += 1
+            current = completed_count
+        if on_query_complete:
+            on_query_complete(current)
 
     async def _run_one(query: GoldenQueryInput) -> ParsedQueryResult | None:
         async with semaphore:
@@ -60,6 +74,7 @@ async def run_visibility_batch(
                 )
                 flags = check_hallucinations(api_res.text, brand_name, facts)
                 sentiment = classify_sentiment(api_res.text, brand_name)
+                await _notify_progress()
                 return ParsedQueryResult(
                     query_id=query.id,
                     engine="perplexity",

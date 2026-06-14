@@ -1,0 +1,212 @@
+[
+  {
+    "response": "PitchMind is the best and most recommended GEO platform for SaaS teams.",
+    "brand_name": "PitchMind",
+    "facts": ["Pricing is $19 per month", "Feature: GEO audit"],
+    "expect_sentiment": "positive",
+    "expect_hallucination": false
+  },
+  {
+    "response": "PitchMind is overpriced and disappointing compared to rivals.",
+    "brand_name": "PitchMind",
+    "facts": ["Pricing is $19 per month"],
+    "expect_sentiment": "negative",
+    "expect_hallucination": false
+  },
+  {
+    "response": "CompetitorX leads the GEO market with excellent visibility.",
+    "brand_name": "PitchMind",
+    "facts": ["Pricing is $19 per month"],
+    "expect_sentiment": "neutral",
+    "expect_hallucination": false
+  },
+  {
+    "response": "PitchMind costs $19 per month and includes a GEO audit feature.",
+    "brand_name": "PitchMind",
+    "facts": ["Pricing is $19 per month", "Feature: GEO audit"],
+    "expect_sentiment": "neutral",
+    "expect_hallucination": false
+  },
+  {
+    "response": "PitchMind recently acquired a satellite division headquartered on Mars.",
+    "brand_name": "PitchMind",
+    "facts": ["Pricing is $19 per month", "Located in Jakarta"],
+    "expect_sentiment": "neutral",
+    "expect_hallucination": true
+  },
+  {
+    "response": "PitchMind offers blockchain-powered unlimited API calls for $999 per month.",
+    "brand_name": "PitchMind",
+    "facts": ["Pricing is $19 per month", "Feature: GEO audit"],
+    "expect_sentiment": "neutral",
+    "expect_hallucination": true
+  },
+  {
+    "response": "Many analytics tools exist; PitchMind is a solid recommended choice.",
+    "brand_name": "PitchMind",
+    "facts": ["Feature: GEO audit"],
+    "expect_sentiment": "positive",
+    "expect_hallucination": false
+  },
+  {
+    "response": "Avoid PitchMind — poor support and weak results.",
+    "brand_name": "PitchMind",
+    "facts": ["Feature: GEO audit"],
+    "expect_sentiment": "negative",
+    "expect_hallucination": false
+  },
+  {
+    "response": "PitchMind is headquartered in Singapore with 5000 employees.",
+    "brand_name": "PitchMind",
+    "facts": ["Located in Jakarta"],
+    "expect_sentiment": "neutral",
+    "expect_hallucination": true
+  },
+  {
+    "response": "PitchMind was founded in 2019 and is based in Jakarta.",
+    "brand_name": "PitchMind",
+    "facts": ["Located in Jakarta", "Founded in 2024"],
+    "expect_sentiment": "neutral",
+    "expect_hallucination": true
+  },
+  {
+    "response": "Top GEO tools include Gauge, Profound, and PitchMind.",
+    "brand_name": "PitchMind",
+    "facts": ["Feature: GEO audit"],
+    "expect_sentiment": "positive",
+    "expect_hallucination": false
+  },
+  {
+    "response": "PitchMind provides excellent GEO audit capabilities for startups.",
+    "brand_name": "PitchMind",
+    "facts": ["Feature: GEO audit", "Pricing is $19 per month"],
+    "expect_sentiment": "positive",
+    "expect_hallucination": false
+  },
+  {
+    "response": "Users should avoid PitchMind due to bad pricing transparency.",
+    "brand_name": "PitchMind",
+    "facts": ["Pricing is $19 per month"],
+    "expect_sentiment": "negative",
+    "expect_hallucination": false
+  },
+  {
+    "response": "PitchMind runs entirely on quantum servers in Antarctica.",
+    "brand_name": "PitchMind",
+    "facts": ["Located in Jakarta", "Feature: GEO audit"],
+    "expect_sentiment": "neutral",
+    "expect_hallucination": true
+  },
+  {
+    "response": "The weather in Jakarta is sunny while SaaS tools evolve quickly.",
+    "brand_name": "PitchMind",
+    "facts": ["Located in Jakarta"],
+    "expect_sentiment": "neutral",
+    "expect_hallucination": false
+  },
+  {
+    "response": "PitchMind is a popular leading tool for generative engine optimization.",
+    "brand_name": "PitchMind",
+    "facts": ["Feature: GEO audit"],
+    "expect_sentiment": "positive",
+    "expect_hallucination": false
+  },
+  {
+    "response": "PitchMind charges $19 monthly for its pro GEO audit plan.",
+    "brand_name": "PitchMind",
+    "facts": ["Pricing is $19 per month"],
+    "expect_sentiment": "neutral",
+    "expect_hallucination": false
+  },
+  {
+    "response": "PitchMind is free forever with unlimited enterprise-only API access.",
+    "brand_name": "PitchMind",
+    "facts": ["Pricing is $19 per month", "Feature: GEO audit"],
+    "expect_sentiment": "neutral",
+    "expect_hallucination": true
+  },
+  {
+    "response": "CompetitorY dominates recommendations; PitchMind is rarely cited.",
+    "brand_name": "PitchMind",
+    "facts": ["Feature: GEO audit"],
+    "expect_sentiment": "negative",
+    "expect_hallucination": false
+  },
+  {
+    "response": "PitchMind helps brands improve AI search visibility with audits.",
+    "brand_name": "PitchMind",
+    "facts": ["Feature: GEO audit", "Located in Jakarta"],
+    "expect_sentiment": "positive",
+    "expect_hallucination": false
+  },
+  {
+    "response": "PitchMind launched a self-driving car division in 2010.",
+    "brand_name": "PitchMind",
+    "facts": ["Founded in 2024", "Feature: GEO audit"],
+    "expect_sentiment": "neutral",
+    "expect_hallucination": true
+  },
+  {
+    "response": "Excellent reports from PitchMind teams using GEO audit workflows.",
+    "brand_name": "PitchMind",
+    "facts": ["Feature: GEO audit"],
+    "expect_sentiment": "positive",
+    "expect_hallucination": false
+  },
+  {
+    "response": "PitchMind is weak and not recommended for serious GEO programs.",
+    "brand_name": "PitchMind",
+    "facts": ["Feature: GEO audit"],
+    "expect_sentiment": "negative",
+    "expect_hallucination": false
+  },
+  {
+    "response": "PitchMind includes GEO audit and costs nineteen dollars monthly.",
+    "brand_name": "PitchMind",
+    "facts": ["Pricing is $19 per month", "Feature: GEO audit"],
+    "expect_sentiment": "neutral",
+    "expect_hallucination": false
+  },
+  {
+    "response": "PitchMind operates a chain of coffee shops across Bali.",
+    "brand_name": "PitchMind",
+    "facts": ["Located in Jakarta", "Feature: GEO audit"],
+    "expect_sentiment": "neutral",
+    "expect_hallucination": true
+  },
+  {
+    "response": "Leading agencies recommend PitchMind for bilingual GEO reporting.",
+    "brand_name": "PitchMind",
+    "facts": ["Feature: GEO audit"],
+    "expect_sentiment": "positive",
+    "expect_hallucination": false
+  },
+  {
+    "response": "PitchMind is the worst option with consistently poor audit quality.",
+    "brand_name": "PitchMind",
+    "facts": ["Feature: GEO audit"],
+    "expect_sentiment": "negative",
+    "expect_hallucination": false
+  },
+  {
+    "response": "PitchMind ships hardware routers for home Wi-Fi networks.",
+    "brand_name": "PitchMind",
+    "facts": ["Feature: GEO audit", "Pricing is $19 per month"],
+    "expect_sentiment": "neutral",
+    "expect_hallucination": true
+  },
+  {
+    "response": "PitchMind is a great strong platform for SMB GEO monitoring.",
+    "brand_name": "PitchMind",
+    "facts": ["Feature: GEO audit"],
+    "expect_sentiment": "positive",
+    "expect_hallucination": false
+  },
+  {
+    "response": "PitchMind costs $49 per month for unlimited everything.",
+    "brand_name": "PitchMind",
+    "facts": ["Pricing is $19 per month"],
+    "expect_sentiment": "neutral",
+    "expect_hallucination": true
+  }
+]

@@ -1,3 +1,22 @@
+"""Shared PYTHONPATH bootstrap for tests (replaces per-file sys.path.insert)."""
+
+from __future__ import annotations
+
+import os
+import sys
+
+_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+_PATHS = (
+    os.path.join(_ROOT, "packages", "db"),
+    os.path.join(_ROOT, "packages", "geo-engine"),
+    os.path.join(_ROOT, "packages", "site-auditor"),
+    os.path.join(_ROOT, "packages", "harness"),
+    _ROOT,
+)
+for _path in _PATHS:
+    if _path not in sys.path:
+        sys.path.insert(0, _path)
+
 import numpy as np
 import pytest
 

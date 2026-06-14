@@ -1,8 +1,8 @@
 # PitchMind — Handoff
 
-> **Stop point:** MVP complete + repo architecture docs (`STRUCTURE.md`)  
-> **Date:** 2026-06-12  
-> **Next:** Production deploy + beta program (Phase 7)
+> **Stop point:** ROAST_REVIEW code fixes complete (credential items deferred)  
+> **Date:** 2026-06-13  
+> **Next:** Production deploy when cloud credentials are ready
 
 ---
 
@@ -12,47 +12,13 @@
 |------|--------|
 | Full audit pipeline | visibility → site → action plan → PDF |
 | Bilingual UI (EN/ID) | landing, auth, onboarding, dashboard, audit |
-| Brand facts + hallucination diff | onboarding + brand settings |
-| Golden queries | 25/template, picker saas/local/ecom |
-| Brand settings | facts, competitors, custom queries |
-| Tier limits | brands, competitors, queries, site audits |
-| Billing code | Stripe checkout/portal/webhook (not live) |
-| Weekly email | Pro/Team, EN+ID, delta + actions, unsubscribe |
-| SSE progress | `GET /api/v1/audits/{id}/stream` |
-| Cache + cost | Perplexity 7-day cache, `estimated_cost_usd` in scorecard |
-| Architecture docs | [STRUCTURE.md](../../STRUCTURE.md), [README.md](../../README.md) |
-
----
-
-## Documentation (repo root)
-
-| File | Purpose |
-|------|---------|
-| [STRUCTURE.md](../../STRUCTURE.md) | Final layer map — frontend, API, worker, packages, connections |
-| [README.md](../../README.md) | Portfolio entry, quick start, stack summary |
-
-PitchMind-specific docs stay in `projects/pitchmind/` (PRD, Plan, progress, this file).
-
----
-
-## Key API & UI routes (MVP)
-
-| Route | Purpose |
-|-------|---------|
-| `GET /api/v1/brands/{id}` | Brand detail + facts + competitors |
-| `DELETE .../competitors/{id}` | Remove competitor |
-| `DELETE .../queries/{id}` | Remove custom query |
-| `GET/PATCH /api/v1/account/email-preferences` | Weekly digest opt-in/out |
-| `GET /api/v1/audits/{id}/stream` | SSE audit progress |
-| `/dashboard/brands/[id]/settings` | Brand management UI |
-
----
-
-## Migrations
-
-```bash
-make migrate   # 001 → 002 → 003 (email_digest_enabled)
-```
+| Semantic ML | sentiment + hallucination (`all-MiniLM-L6-v2`) |
+| AgentHarness | budget + circuit breaker + retry |
+| SSE progress | Redis pub/sub + 5s DB fallback |
+| CI | pytest (41) + ruff + `.env` guard + ML eval gate |
+| API route tests | health, workspaces, brand 403 |
+| Realistic Perplexity mocks | 4 variants |
+| Architecture docs | [STRUCTURE.md](../../STRUCTURE.md), [system-design.md](./system-design.md) |
 
 ---
 
@@ -62,15 +28,48 @@ make migrate   # 001 → 002 → 003 (email_digest_enabled)
 # .env: DATABASE_URL, REDIS_URL, SUPABASE_JWT_SECRET, optional PERPLEXITY + OLLAMA
 make dev-up && make migrate
 make api && make worker && make web
-pytest tests/        # 26 passed
-cd apps/web && npm run build
+make test        # 41 passed
+make lint
 ```
 
 Perplexity mock mode works without API key. Ollama action plan falls back to template without key.
 
 ---
 
-## Deploy (no Stripe needed)
+## Key API routes
+
+| Route | Purpose |
+|-------|---------|
+| `GET /health` | Liveness |
+| `GET /api/v1/workspaces` | List workspaces |
+| `GET /api/v1/brands/{id}` | Brand detail + facts + competitors |
+| `GET /api/v1/audits/{id}/stream` | SSE via Redis `audit:progress:{id}` |
+| `/dashboard/brands/[id]/settings` | Brand management UI |
+
+---
+
+## ROAST_REVIEW status
+
+| Item | Status |
+|------|--------|
+| P1 ML component | DONE |
+| P2 CI pytest + ruff | DONE |
+| P3 AgentHarness | DONE |
+| P4 Realistic mocks | DONE |
+| #5 sys.path.insert | DONE → PYTHONPATH |
+| #7 get_owned_brand dedup | DONE |
+| #8 SSE SQL polling | DONE → Redis pub/sub |
+| #9 .env git safety | DONE → CI guard |
+| API route tests | DONE |
+| P5 Eval pipeline | DONE (dataset + CI gate) |
+| P0 Deploy | **skipped** — credentials |
+| Langfuse + Sentry | **skipped** — credentials |
+| Supabase RLS | **skipped** — credentials |
+| Stripe live | **skipped** — by choice |
+
+---
+
+## Deploy (when credentials ready)
 
 | Service | Notes |
 |---------|-------|
@@ -78,33 +77,7 @@ Perplexity mock mode works without API key. Ollama action plan falls back to tem
 | Railway API | `apps/api/Dockerfile` |
 | Railway Worker + Beat | `apps/worker/Dockerfile` |
 | Supabase | Postgres + Auth JWT secret |
-| Upstash | Redis for Celery |
-
-Skip `STRIPE_*` env vars until ready to accept payments.
-
----
-
-## Intentionally deferred
-
-- Stripe live checkout (user choice)
-- ChatGPT / Gemini engines
-- Langfuse, Sentry, Supabase RLS
-- Historical trend charts (P2)
-- Eval pipeline + labeled dataset (ROAST_REVIEW P5)
-
----
-
-## ROAST_REVIEW upgrades (2026-06-13) — DONE
-
-| Item | Status |
-|------|--------|
-| Semantic ML (`all-MiniLM-L6-v2`) | sentiment + hallucination |
-| CI pytest + ruff | 35 tests, no `\|\| true` |
-| AgentHarness | budget + circuit breaker + retry |
-| Realistic Perplexity mocks | 4 variants |
-| `get_owned_brand()` in deps.py | deduplicated |
-
-See [ROAST_REVIEW.md](./ROAST_REVIEW.md) for full review context.
+| Upstash | Redis for Celery + SSE pub/sub |
 
 ---
 

@@ -1,8 +1,3 @@
-import os
-import sys
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "packages", "geo-engine"))
-
 from pitchmind_geo.action_plan import generate_action_plan, template_action_plan
 
 

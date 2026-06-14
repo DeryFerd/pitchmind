@@ -1,8 +1,3 @@
-import os
-import sys
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "packages", "db"))
-
 from pitchmind_db.seed_templates import render_templates
 
 

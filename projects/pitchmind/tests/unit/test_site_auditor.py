@@ -1,8 +1,3 @@
-import os
-import sys
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "packages", "site-auditor"))
-
 from pitchmind_site.auditor import run_site_audit
 from pitchmind_site.llms_txt import check_llms_txt
 from pitchmind_site.readiness_score import compute_readiness_score

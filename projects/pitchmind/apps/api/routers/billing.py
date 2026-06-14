@@ -1,12 +1,6 @@
-import os
-import sys
-
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "packages", "db"))
-
 from pitchmind_db.models import SubscriptionTier
+from sqlalchemy.orm import Session
 
 from apps.api.deps import get_db
 from apps.api.middleware.auth import AuthUser, get_current_user

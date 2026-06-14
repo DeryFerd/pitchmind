@@ -1,15 +1,10 @@
-import os
-import sys
 import uuid
 from collections.abc import Generator
 
 from fastapi import HTTPException
-from sqlalchemy.orm import Session
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "packages", "db"))
-
 from pitchmind_db.base import get_session_factory
 from pitchmind_db.models import Brand, Workspace
+from sqlalchemy.orm import Session
 
 from apps.api.middleware.auth import AuthUser
 

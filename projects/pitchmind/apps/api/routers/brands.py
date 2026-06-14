@@ -1,14 +1,9 @@
-import os
-import sys
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "packages", "db"))
-
 from pitchmind_db.models import Brand, BrandFacts, Competitor, GoldenQuery, QueryLang, Workspace
 from pitchmind_db.seed_templates import render_templates
+from sqlalchemy.orm import Session
 
 from apps.api.deps import get_db, get_owned_brand
 from apps.api.middleware.auth import AuthUser, get_current_user

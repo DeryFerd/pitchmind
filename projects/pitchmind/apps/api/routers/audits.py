@@ -1,21 +1,14 @@
-import asyncio
-import json
-import os
-import sys
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import Response, StreamingResponse
-from sqlalchemy.orm import Session
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "packages", "db"))
-
 from pitchmind_db.models import (
     AuditRun,
     AuditStatus,
     GoldenQuery,
     QueryResult,
 )
+from sqlalchemy.orm import Session
 
 from apps.api.deps import get_db, get_owned_brand
 from apps.api.middleware.auth import AuthUser, get_current_user
@@ -27,6 +20,7 @@ from apps.api.schemas import (
     QueryResultOut,
     SiteFindingOut,
 )
+from apps.api.services.audit_stream import stream_audit_events
 from apps.api.services.billing import check_audit_limits, record_audit_usage
 from apps.api.services.pdf_export import build_audit_pdf
 
@@ -190,28 +184,10 @@ async def stream_audit(
         raise HTTPException(status_code=404, detail="Audit not found")
     get_owned_brand(db, audit.brand_id, auth)
 
-    async def event_generator():
-        for _ in range(90):
-            db.expire_all()
-            current = db.get(AuditRun, audit_id)
-            if not current:
-                break
-            count = db.query(QueryResult).filter(QueryResult.audit_run_id == audit_id).count()
-            payload = {
-                "audit_id": str(audit_id),
-                "status": current.status.value,
-                "query_results_count": count,
-            }
-            yield f"data: {json.dumps(payload)}\n\n"
-            if current.status in (
-                AuditStatus.COMPLETED,
-                AuditStatus.PARTIAL,
-                AuditStatus.FAILED,
-            ):
-                break
-            await asyncio.sleep(2)
-
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
+    return StreamingResponse(
+        stream_audit_events(db, audit_id),
+        media_type="text/event-stream",
+    )
 
 
 @router.get("/brands/{brand_id}/audits", response_model=list[AuditSummary])

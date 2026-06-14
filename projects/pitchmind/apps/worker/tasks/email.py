@@ -4,12 +4,8 @@ from __future__ import annotations
 
 import logging
 import os
-import sys
 
 import httpx
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "packages", "db"))
-
 from pitchmind_db.base import get_session_factory
 from pitchmind_db.models import ActionPlan, AuditRun, AuditStatus, Brand, User, Workspace
 
