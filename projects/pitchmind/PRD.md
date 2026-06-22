@@ -1,8 +1,8 @@
 # PitchMind — Product Requirements Document
 
-> Version: 1.0  
-> Last updated: 2026-06-11  
-> Status: MVP ~95% — core product complete; deploy + beta pending  
+> Version: 1.1  
+> Last updated: 2026-06-13  
+> Status: MVP ~97% — Phases 1–5 product code complete; production deploy, observability, and beta launch pending  
 > Owner: Full-stack AI SaaS Portfolio
 
 ---
@@ -52,7 +52,7 @@ PitchMind is an end-to-end GEO audit platform that:
 
 | # | Goal |
 |---|------|
-| G1 | Measure brand visibility across Perplexity + spot-check ChatGPT/Gemini |
+| G1 | Measure brand visibility across Perplexity (MVP); ChatGPT/Gemini spot-check deferred to v1.1 |
 | G2 | Support golden query sets in **English and Indonesian** |
 | G3 | Detect hallucinations vs user-defined brand facts |
 | G4 | Audit site AI-readiness: `llms.txt`, JSON-LD, AI bot access |
@@ -135,12 +135,16 @@ PitchMind is an end-to-end GEO audit platform that:
 
 ### 4.3 AI Visibility Scan
 
-| Engine | MVP Approach |
-|--------|--------------|
-| **Perplexity** | Primary — API with citations |
-| **ChatGPT** | Spot-check via manual golden-set UI or optional automation (Pro) |
-| **Gemini** | Spot-check 5 queries per audit (Free: 2) |
-| **Google AI Overviews** | Indirect via query simulation + future integration |
+| Engine | MVP Approach | Implementation |
+|--------|--------------|----------------|
+| **Perplexity** | Primary — API with citations | **Shipped** — full golden-set audit via API + worker |
+| **ChatGPT** | Spot-check via manual golden-set UI or optional automation (Pro) | **Deferred v1.1** — no bulk API |
+| **Gemini** | Spot-check 5 queries per audit (Free: 2) | **Deferred v1.1** |
+| **Google AI Overviews** | Indirect via query simulation + future integration | **Not started** |
+
+**MVP scope:** Perplexity-only automated audits. Multi-engine spot-check is post-MVP per NG6.
+
+**ML stack (shipped):** Sentiment + semantic hallucination via `sentence-transformers` (`all-MiniLM-L6-v2`); regex fallback; 30-item eval dataset with precision/recall/F1 gate in CI.
 
 **Output per query:**
 - Raw AI response
@@ -173,6 +177,8 @@ Automated crawl checks:
 | FAQ or Q&A structured content | 15% |
 | Citable chunks (130-170 word segments) | 10% |
 | HTTPS, mobile-friendly, page speed baseline | 10% |
+
+**Implementation note:** PageSpeed / `performance.py` check deferred; remaining 6 checks shipped.
 
 ### 4.6 Action Plan Generator
 
@@ -280,13 +286,13 @@ Alert on dashboard -> View incorrect AI statement -> See suggested source fix
 
 ### Technical Metrics
 
-| Metric | Target |
-|--------|--------|
-| Citation detection precision | >80% |
-| Hallucination flag recall | >70% |
-| API cost per audit (25 queries + action plan) | <$0.60 |
-| Uptime | >99% |
-| P95 API response (non-audit) | <500ms |
+| Metric | Target | Implementation |
+|--------|--------|----------------|
+| Citation detection precision | >80% | **CI gate** — 30-item eval dataset (`tests/eval/`); thresholds tuned for test encoder |
+| Hallucination flag recall | >70% | **CI gate** — same eval pipeline |
+| API cost per audit (25 queries + action plan) | <$0.60 | Tracked via `estimated_cost_usd` + AgentHarness budget (live mode) |
+| Uptime | >99% | Pending production deploy + monitoring |
+| P95 API response (non-audit) | <500ms | Not validated on production |
 
 ---
 
@@ -301,11 +307,22 @@ Alert on dashboard -> View incorrect AI statement -> See suggested source fix
 
 ## 9. Success Criteria (MVP Launch)
 
+### Product (code) — DONE
+
+- [x] Full audit pipeline works EN + ID (Perplexity + site audit + action plan)
+- [x] Auth (Supabase) code + tier limits enforced
+- [x] Stripe billing code (checkout, portal, webhooks)
+- [x] Bilingual UI (en/id) for core flows
+- [x] 41 automated tests + ML eval gate in CI
+- [x] SSE audit progress API (Redis pub/sub); web UI still polls
+
+### Launch — PENDING
+
 - [ ] Public URL deployed and stable
-- [ ] Auth (Supabase) + Stripe billing live
-- [ ] Full audit pipeline works EN + ID
+- [ ] Auth (Supabase) + **Stripe billing live** (production keys)
 - [ ] 10 beta users with real brands (not fake data)
 - [ ] At least 1 paying Pro user within 30 days
+- [ ] Audit completes in <5 min (P95) on production
 - [ ] Case study documented with before/after SoM screenshot
 - [ ] Portfolio README links to live demo
 
@@ -316,7 +333,7 @@ Alert on dashboard -> View incorrect AI statement -> See suggested source fix
 | Risk | Impact | Mitigation |
 |------|--------|------------|
 | Perplexity API cost at scale | High | Cache 7 days; batch queries; tier limits |
-| Non-deterministic AI answers | Medium | 3 samples per query; report median; note variance |
+| Non-deterministic AI answers | Medium | 3 samples per query; report median; note variance — **MVP uses 1 sample/query** |
 | No ChatGPT bulk API | Medium | Perplexity primary; manual spot-check UI |
 | Low ID market willingness to pay | Medium | Free tier generous; ID templates; local community GTM |
 | Ollama Cloud quota exhausted | Medium | Use level 1-2 models; cache action plans; Pro account ($20/mo) for dev |
@@ -329,9 +346,10 @@ Alert on dashboard -> View incorrect AI statement -> See suggested source fix
 ## 11. Compliance & Privacy
 
 - Store AI responses only for user's own audit history (not shared)
-- GDPR-ready: data export + delete account
+- GDPR-ready: data export + delete account — **not implemented** (post-MVP)
 - No selling of audit data to third parties
 - Terms: audit results are indicative, not guaranteed outcomes
+- Supabase **RLS** policies — **not configured** (pending production hardening)
 
 ---
 
@@ -356,6 +374,22 @@ Alert on dashboard -> View incorrect AI statement -> See suggested source fix
 - [Ollama Cloud Models Blog](https://ollama.com/blog/cloud-models)
 - [AI Citation Ranking — RAG Signal](https://ragsignal.com/ai-citation-ranking/)
 - Deloitte Tech Trends 2026 — GEO as adjacent signal
+
+---
+
+## Appendix B: Implementation Status (2026-06-13)
+
+| Area | Status | Notes |
+|------|--------|-------|
+| Phases 1–5 (product) | **Done** | API, worker, geo-engine, site auditor, dashboard, action plan, email, PDF |
+| Phase 6 (billing code) | **Done** | Stripe integration; not live |
+| Phase 6 (deploy) | **Pending** | Railway, Vercel, Supabase prod, Upstash prod |
+| Phase 6 (observability) | **Pending** | Sentry, Langfuse, uptime monitoring |
+| Phase 7 (beta/launch) | **Not started** | Blocked on deploy |
+| ROAST review fixes | **Done** | Semantic ML, harness, SSE, eval gate, API tests, CI hardening |
+| Deferred vs original PRD | — | ChatGPT/Gemini, PageSpeed, 3-samples/query, GDPR export, RLS, web SSE UI |
+
+See also: `Plan.md`, `progress.md`, `handoff.md`, `STRUCTURE.md`.
 
 ---
 
